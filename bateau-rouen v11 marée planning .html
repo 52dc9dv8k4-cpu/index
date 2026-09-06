@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bateau Rouen">
+<meta name="theme-color" content="#13293D">
+<title>Bateau — Suivi de service</title>
+<style>
+  :root{
+    --navy:#13293D; --navy-ink:#1B2B36; --paper:#E8ECEA; --card:#FDFDFB;
+    --brass:#B08A3E; --brass-dark:#8C6C2E; --teal:#4C7A73; --muted:#6B7B85;
+    --border:#D5DBD6; --danger:#AE4430; --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--navy-ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:20px 16px 48px;
+  }
+  .wrap{max-width:460px;margin:0 auto;}
+
+  header{display:flex;align-items:center;gap:12px;}
+  header svg{flex-shrink:0;}
+  header h1{font-family:Georgia,"Iowan Old Style",serif;font-size:22px;font-weight:700;margin:0;color:var(--navy);line-height:1.15;}
+  header p{margin:2px 0 0;font-size:12.5px;color:var(--muted);}
+
+  section{margin-bottom:22px;}
+  .section-label{font-size:13px;font-weight:600;color:var(--teal);border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px;}
+  section:first-of-type .section-label{border-top:none;padding-top:0;}
+
+  .new-service-btn{display:block;margin:10px auto 0;font-size:13px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px;}
+
+  input[type="text"], input[type="time"], input[type="number"]{
+    width:100%;border:none;border-bottom:2px solid var(--navy);background:transparent;
+    font-size:16px;color:var(--navy-ink);padding:6px 2px;outline:none;
+  }
+  input:focus{border-bottom-color:var(--brass);}
+  input::placeholder{color:#A9B2AC;}
+
+  select{
+    width:100%;border:none;border-bottom:2px solid var(--navy);background:transparent;
+    font-family:inherit;font-size:16px;color:var(--navy-ink);padding:8px 2px;outline:none;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7B85' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 2px center;background-size:18px;
+  }
+  select:focus{border-bottom-color:var(--brass);}
+
+  .row-inline{display:flex;gap:8px;align-items:center;}
+  .row-inline input{flex:1;}
+  .btn-now{background:none;border:1px solid var(--brass);color:var(--brass-dark);border-radius:6px;padding:9px 12px;font-size:12.5px;white-space:nowrap;}
+
+  .time-select-row{display:flex;align-items:center;gap:6px;}
+  .time-select-row select{width:auto;flex:1;text-align:center;}
+  .time-sep{font-weight:700;color:var(--navy);font-size:16px;}
+
+  .quai-suggestions{border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;background:#fff;display:none;}
+  .quai-suggestion{padding:9px 12px;font-size:14px;border-top:1px solid var(--border);cursor:pointer;}
+  .quai-suggestion:first-child{border-top:none;}
+  .quai-suggestion:active{background:#EEF1EF;}
+
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--navy-ink);margin-bottom:10px;}
+  .checkbox-row input[type="checkbox"]{width:18px;height:18px;flex-shrink:0;}
+  .ap-subfield{margin-left:2px;margin-bottom:14px;}
+
+  .chip-list{display:flex;flex-wrap:wrap;margin-bottom:6px;}
+  .chip{display:inline-flex;align-items:center;gap:5px;background:#EEF1EF;border:1px solid var(--border);border-radius:999px;padding:4px 8px 4px 10px;font-size:13px;font-family:"SF Mono",Menlo,Consolas,monospace;margin:0 6px 6px 0;}
+  .chip-x{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0;line-height:1;}
+
+  .cat-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .cat-btn{flex:1 1 40%;background:transparent;border:1.5px solid var(--cat-color,var(--navy));color:var(--cat-color,var(--navy));border-radius:999px;padding:9px 6px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;}
+  .cat-btn.active{background:var(--cat-color,var(--navy));color:#fff;}
+
+  #categoryHint{color:var(--muted);font-size:13px;padding:6px 0 4px;}
+
+  .btn-row{display:flex;gap:10px;margin-top:8px;}
+  button{font-size:15px;font-weight:600;border-radius:var(--radius);padding:12px 16px;border:none;cursor:pointer;}
+  .btn-primary{background:var(--navy);color:#fff;width:100%;}
+  .btn-primary:active{background:#0C1D2C;}
+  .btn-secondary{background:transparent;color:var(--brass-dark);border:1.5px solid var(--brass);width:100%;}
+  .btn-secondary:active{background:#F4EBDA;}
+  .btn-text{background:none;color:var(--muted);text-decoration:underline;font-weight:400;font-size:13px;padding:6px 0;}
+
+  .status-msg{font-size:13px;color:var(--danger);margin-top:8px;min-height:16px;}
+  .toast{font-size:13px;color:var(--teal);margin-top:8px;min-height:16px;font-weight:600;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+
+  .planning-card{position:relative;overflow:hidden;}
+  .planning-status{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .planning-dot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+  .planning-status-main{font-size:18px;font-weight:700;color:var(--navy);}
+  .planning-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .planning-next{border-top:1px solid var(--border);padding-top:10px;font-size:13px;color:var(--navy-ink);}
+  .planning-next strong{color:var(--navy);}
+  .planning-day{min-width:62px;border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;background:#fff;}
+  .planning-day.today{border:2px solid var(--brass);padding:6px 4px;}
+  .planning-day-name{font-size:10px;color:var(--muted);}
+  .planning-day-label{font-size:12px;font-weight:700;color:var(--navy);margin-top:3px;}
+  .planning-day-date{font-size:10px;color:var(--muted);margin-top:2px;}
+
+  .cat-group{border-left:3px solid var(--cat-color,var(--muted));padding-left:10px;margin-bottom:16px;}
+  .cat-group-title{font-size:12.5px;font-weight:700;color:var(--cat-color,var(--navy));margin-bottom:6px;}
+  .op-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;border-top:1px solid var(--border);gap:9px;}
+  .op-row:first-of-type{border-top:none;}
+  .op-main{flex:1;font-size:15px;color:var(--navy-ink);cursor:pointer;min-width:0;}
+  .op-detail-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:3px;}
+  .op-detail-main{font-size:13px;color:var(--muted);}
+  .op-detail-ap{font-size:12px;color:var(--brass-dark);font-weight:600;white-space:nowrap;flex-shrink:0;}
+  .op-trash{background:none;border:none;font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;}
+
+  .op-row-confirm{background:#FBEAE5;border-radius:6px;padding:9px 10px;margin:4px 0;}
+  .op-confirm-text{font-size:13px;color:var(--danger);margin-bottom:8px;}
+  .op-confirm-actions{display:flex;gap:8px;}
+  .op-confirm-actions button{flex:1;padding:8px;font-size:13px;border-radius:6px;}
+  .op-confirm-yes{background:var(--danger);color:#fff;border:none;}
+  .op-confirm-no{background:none;border:1px solid var(--muted);color:var(--muted);}
+
+  .confirm-box{background:#FBEAE5;border-radius:8px;padding:10px 12px;margin-top:8px;}
+  .confirm-box .confirm-text{font-size:13px;color:var(--danger);margin-bottom:8px;}
+  .confirm-box .confirm-actions{display:flex;gap:8px;}
+  .confirm-box .confirm-actions button{flex:1;padding:9px;font-size:13px;border-radius:6px;}
+  .confirm-yes{background:var(--danger);color:#fff;border:none;}
+  .confirm-no{background:none;border:1px solid var(--muted);color:var(--muted);}
+
+  .history-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);gap:10px;cursor:pointer;}
+  .history-item:first-child{border-top:none;}
+  .history-left{font-size:13.5px;min-width:0;}
+  .history-left .lieu{font-weight:600;color:var(--navy-ink);display:block;}
+  .history-left .date{color:var(--muted);font-size:12.5px;}
+  .history-total{font-family:"SF Mono",Menlo,Consolas,monospace;color:var(--brass-dark);font-weight:600;font-size:13.5px;}
+  .history-detail{padding:4px 0 12px 4px;}
+  .history-op-row{padding:6px 0;border-top:1px solid var(--border);font-size:13px;}
+  .history-op-row:first-child{border-top:none;}
+  .empty-history{color:var(--muted);font-size:13px;padding:8px 0;}
+
+  .btn-fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--navy);color:#fff;border:none;font-size:30px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 3px;box-shadow:0 4px 14px rgba(19,41,61,.28);z-index:900;}
+  .btn-fab:active{background:#0C1D2C;transform:scale(.96);}
+
+  .busy-alert{
+    position:fixed;top:calc(14px + env(safe-area-inset-top));left:14px;right:14px;max-width:432px;margin:0 auto;
+    background:#3A2410;border:1px solid var(--brass);border-radius:10px;padding:12px 14px;
+    display:flex;align-items:flex-start;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:1200;color:#fff;
+  }
+  .busy-alert-icon{font-size:20px;line-height:1;}
+  .busy-alert-title{font-weight:700;font-size:14px;}
+  .busy-alert-sub{font-size:13px;opacity:.85;margin-top:2px;}
+  .busy-alert-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(19,41,61,0.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .18s ease;}
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal-sheet{background:var(--paper);width:100%;max-width:460px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:14px 16px 28px;box-shadow:0 -4px 24px rgba(0,0,0,0.25);transform:translateY(14px);transition:transform .18s ease;}
+  .modal-overlay.open .modal-sheet{transform:translateY(0);}
+  .modal-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 14px;}
+  .modal-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-header-row h2{font-family:Georgia,"Iowan Old Style",serif;font-size:18px;color:var(--navy);margin:0;}
+  .btn-close{background:none;border:none;font-size:24px;color:var(--muted);line-height:1;padding:2px 8px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div style="display:flex;justify-content:center;align-items:center;margin-bottom:22px;">
+    <header style="justify-content:center;text-align:center;">
+      <div>
+        <h1 id="headerTitle">Bateau Rouen</h1>
+        <p id="headerSubtitle">Service en cours</p>
+      </div>
+    </header>
+    <button type="button" class="btn-fab" id="btnOpenAdd" title="Ajouter une opération">+</button>
+  </div>
+
+  <section>
+    <div class="section-label">Mon planning</div>
+    <div class="card planning-card" id="planningCardWrap">
+    <div id="planningChooser" style="display:none;">
+      <div style="font-size:15px;color:var(--navy-ink);margin-bottom:12px;font-weight:600;">Quel planning utilises-tu ?</div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn-primary" id="btnPlan7" style="width:auto;flex:1;">7</button>
+        <button type="button" class="btn-primary" id="btnPlan17" style="width:auto;flex:1;">17</button>
+      </div>
+    </div>
+    <div id="planningContent" style="display:none;"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Marée Rouen</div>
+    <div class="card" id="tideCard">Chargement…</div>
+  </section>
+
+
+  <div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header-row">
+      <h2>Nouvelle opération</h2>
+      <button type="button" class="btn-close" id="btnCloseModal">×</button>
+    </div>
+    <div class="cat-row" id="catRow"></div>
+    <div class="field" id="editingBanner" style="display:none;background:#F4EBDA;border:1px solid #E3D2AC;border-radius:8px;padding:10px 12px;">
+      <span style="font-size:13px;color:#8C6C2E;">Modification d'une opération existante</span>
+      <button type="button" class="btn-text" id="btnCancelEdit" style="display:block;margin-top:4px;">Annuler la modification</button>
+    </div>
+    <div id="categoryHint">Choisis une catégorie ci-dessus pour commencer.</div>
+
+    <div id="form-arrivee" style="display:none;">
+      <div class="field" id="arriveeQuaiField">
+        <label>Quai</label>
+        <input type="text" id="arriveeQuai" placeholder="Tape ou choisis un quai" autocomplete="off">
+        <div class="quai-suggestions" id="arriveeQuaiSuggestions"></div>
+      </div>
+      <div class="field"><label>Heure pilote à bord</label><div class="time-select-row"><select class="time-h" data-target="arriveeHeurePilote"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="arriveeHeurePilote"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="arriveeHeurePilote"></div>
+      <div class="field" id="arriveeCaudebecField"><label>Heure passage Caudebec</label><div class="time-select-row"><select class="time-h" data-target="arriveeHeureCaudebec"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="arriveeHeureCaudebec"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="arriveeHeureCaudebec"></div>
+      <div class="field" id="arriveeBouilleField"><label>Heure passage La Bouille</label><div class="time-select-row"><select class="time-h" data-target="arriveeHeureBouille"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="arriveeHeureBouille"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="arriveeHeureBouille"></div>
+      <div class="field" id="arriveeLamaneurField" style="display:none;"><label>Heure lamaneur sur place</label><div class="time-select-row"><select class="time-h" data-target="arriveeHeureLamaneur"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="arriveeHeureLamaneur"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="arriveeHeureLamaneur"></div>
+      <div class="field">
+        <label>Vedette(s)</label>
+        <div class="chip-list" id="arriveeVedetteChips"></div>
+        <div class="row-inline"><input type="number" id="arriveeVedetteInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="arriveeVedetteBtn">Ajouter</button></div>
+      </div>
+      <div class="field">
+        <label>Équipe à terre</label>
+        <div class="chip-list" id="arriveeEquipeChips"></div>
+        <div class="row-inline"><input type="number" id="arriveeEquipeInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="arriveeEquipeBtn">Ajouter</button></div>
+      </div>
+      <label class="checkbox-row"><input type="checkbox" id="arriveeApCheck"> AP (amarres de poste)</label>
+      <div class="ap-subfield" id="arriveeApField" style="display:none;">
+        <div class="field"><label>Nombre à mettre</label>
+          <select id="arriveeApValue"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Remarque</label><input type="text" id="arriveeRemarque" placeholder="Optionnel"></div>
+    </div>
+
+    <div id="form-depart" style="display:none;">
+      <div class="field" id="departQuaiField">
+        <label>Quai</label>
+        <input type="text" id="departQuai" placeholder="Tape ou choisis un quai" autocomplete="off">
+        <div class="quai-suggestions" id="departQuaiSuggestions"></div>
+      </div>
+      <div class="field"><label>Heure début d'opération</label><div class="time-select-row"><select class="time-h" data-target="departHeure"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="departHeure"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="departHeure"></div>
+      <div class="field">
+        <label>Vedette(s)</label>
+        <div class="chip-list" id="departVedetteChips"></div>
+        <div class="row-inline"><input type="number" id="departVedetteInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="departVedetteBtn">Ajouter</button></div>
+      </div>
+      <div class="field">
+        <label>Équipe à terre</label>
+        <div class="chip-list" id="departEquipeChips"></div>
+        <div class="row-inline"><input type="number" id="departEquipeInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="departEquipeBtn">Ajouter</button></div>
+      </div>
+      <label class="checkbox-row"><input type="checkbox" id="departApCheck"> AP (amarres de poste)</label>
+      <div class="ap-subfield" id="departApField" style="display:none;">
+        <div class="field"><label>Nombre à retirer</label>
+          <select id="departApValue"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Remarque</label><input type="text" id="departRemarque" placeholder="Optionnel"></div>
+    </div>
+
+    <div id="form-mouvement" style="display:none;">
+      <div class="field" id="mouvementQuaiDepartField">
+        <label>Quai de départ</label>
+        <input type="text" id="mouvementQuaiDepart" placeholder="Tape ou choisis un quai" autocomplete="off">
+        <div class="quai-suggestions" id="mouvementQuaiDepartSuggestions"></div>
+      </div>
+      <div class="field" id="mouvementQuaiArriveeField">
+        <label>Quai d'arrivée</label>
+        <input type="text" id="mouvementQuaiArrivee" placeholder="Tape ou choisis un quai" autocomplete="off">
+        <div class="quai-suggestions" id="mouvementQuaiArriveeSuggestions"></div>
+      </div>
+      <div class="field"><label>Heure début d'opération</label><div class="time-select-row"><select class="time-h" data-target="mouvementHeure"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="mouvementHeure"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="mouvementHeure"></div>
+      <div class="field">
+        <label>Vedette(s)</label>
+        <div class="chip-list" id="mouvementVedetteChips"></div>
+        <div class="row-inline"><input type="number" id="mouvementVedetteInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="mouvementVedetteBtn">Ajouter</button></div>
+      </div>
+      <div class="field">
+        <label>Équipe à terre</label>
+        <div class="chip-list" id="mouvementEquipeChips"></div>
+        <div class="row-inline"><input type="number" id="mouvementEquipeInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="mouvementEquipeBtn">Ajouter</button></div>
+      </div>
+      <label class="checkbox-row"><input type="checkbox" id="mouvementApCheck"> AP (amarres de poste)</label>
+      <div class="ap-subfield" id="mouvementApField" style="display:none;">
+        <div class="field"><label>À retirer (quai de départ)</label>
+          <select id="mouvementApRetirer"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+        </div>
+        <div class="field"><label>À remettre (quai d'arrivée)</label>
+          <select id="mouvementApRemettre"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Remarque</label><input type="text" id="mouvementRemarque" placeholder="Optionnel"></div>
+    </div>
+
+    <div id="form-corvee" style="display:none;">
+      <div class="field">
+        <label>Type de corvée</label>
+        <select id="corveeType">
+          <option value="" disabled selected>Choisis un type</option>
+          <option>Lamatrans</option><option>NVS</option><option>Honfleur</option><option>Port Jérôme</option><option>Dieppe</option>
+          <option>Garde gaz</option><option>Lutte anti-pollution</option>
+          <option>Plein de carburant</option><option>Surveillance des navires</option>
+        </select>
+      </div>
+      <div class="field"><label>Heure d'opération</label><div class="time-select-row"><select class="time-h" data-target="corveeHeure"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="corveeHeure"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="corveeHeure"></div>
+      <div class="field" id="corveeLamaneurField" style="display:none;"><label>Heure lamaneur sur place</label><div class="time-select-row"><select class="time-h" data-target="corveeHeureLamaneur"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span class="time-sep">:</span><select class="time-m" data-target="corveeHeureLamaneur"><option value="">--</option><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><input type="hidden" id="corveeHeureLamaneur"></div>
+      <div class="field">
+        <label>Numéros</label>
+        <div class="chip-list" id="corveeNumerosChips"></div>
+        <div class="row-inline"><input type="number" id="corveeNumerosInput" placeholder="Numéro" inputmode="numeric"><button type="button" class="btn-now" id="corveeNumerosBtn">Ajouter</button></div>
+      </div>
+      <div class="field"><label>Remarque</label><input type="text" id="corveeRemarque" placeholder="Optionnel"></div>
+    </div>
+
+    <button class="btn-primary" id="btnAdd" style="display:none;">Ajouter</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+  </div>
+
+  <section>
+    <div class="section-label">Service en cours</div>
+    <div class="card">
+      <div id="board"></div>
+      <div class="toast" id="toastMsg"></div>
+    </div>
+    <button class="btn-text new-service-btn" id="btnNewService">+ Nouveau service</button>
+    <div class="confirm-box" id="newServiceConfirm" style="display:none;">
+      <div class="confirm-text">Le tableau actuel sera vidé (l'historique reste dans "Services précédents"). Confirmer ?</div>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-yes" id="newServiceYes">Confirmer</button>
+        <button type="button" class="confirm-no" id="newServiceNo">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Services précédents</div>
+    <div id="serviceHistory"></div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const ROUEN_QUAIS = ["Moulinaux","Gcvl","Mrm","Mrm barge","Caru","Sogema","Qpap","Paj","Q300","Q430","Qpc1","Qpc2","Qpc3","P14","P10 simarex","Apga","CpaQ","Cpa2","Agq","Cpa1","Qgq","Mpca","Qrq","Antar","Elie","Rive droite","Terminal croisière","Musoir","Qw","Skally","Levy","Soufflet","Soufflet barge","P13","P15","Lecu","P27","P25","Qtsw","Le Trait"];
+  const CATS = [
+    {key:'arrivee', label:'Arrivé', color:'#3E7068'},
+    {key:'depart', label:'Départ', color:'#B08A3E'},
+    {key:'mouvement', label:'Mouvement', color:'#3E5C82'},
+    {key:'corvee', label:'Corvée', color:'#7A6A45'}
+  ];
+
+  // -- sélecteurs heure / minute (par tranche de 5 min) --
+  document.addEventListener('change', e => {
+    if(e.target.classList.contains('time-h') || e.target.classList.contains('time-m')){
+      const target = e.target.dataset.target;
+      const h = document.querySelector(`.time-h[data-target="${target}"]`).value;
+      const m = document.querySelector(`.time-m[data-target="${target}"]`).value;
+      $(target).value = (h && m) ? `${h}:${m}` : '';
+    }
+  });
+  function setTimeSelectValue(target, value){
+    const hSel = document.querySelector(`.time-h[data-target="${target}"]`);
+    const mSel = document.querySelector(`.time-m[data-target="${target}"]`);
+    if(value && value.includes(':')){
+      const [h,m] = value.split(':');
+      hSel.value = h; mSel.value = m;
+    } else {
+      hSel.value = ''; mSel.value = '';
+    }
+    $(target).value = value || '';
+  }
+
+  const SERVICE_SECTEUR = 'Rouen';
+  let activeCategoryKey = null;
+  let activeService = null;
+  let operations = [];
+  let editingId = null;
+  let expandedServiceId = null;
+  const pendingDelete = new Set();
+
+  // -- choix du planning (7 ou 17) : isole complètement les données stockées --
+  let PLAN_CHOICE = null; // '7' ou '17'
+  function keyFor(base){ return `${base}_${PLAN_CHOICE}`; }
+
+  // -- planning personnel : cycle 11 jours de quart + 6 jours de repos --
+  // Même structure de cycle pour les deux plannings ; seule la date de départ change.
+  const PLANNING_ANCHORS = {
+    '17': new Date(2026, 8, 14, 8, 0, 0, 0),  // lundi 14/09/2026 à 08:00
+    '7':  new Date(2026, 8, 4, 8, 0, 0, 0)    // vendredi 04/09/2026 à 08:00
+  };
+  const PLANNING_CYCLE = [
+    {label:'SD10', type:'SD'},
+    {label:'S1', type:'S'},
+    {label:'D1', type:'D'},
+    {label:'S2', type:'S'},
+    {label:'D2', type:'D'},
+    {label:'S3', type:'S'},
+    {label:'D3', type:'D'},
+    {label:'S4', type:'S'},
+    {label:'SD9', type:'SD'},
+    {label:'S5', type:'S'},
+    {label:'SD11', type:'SD'},
+    {label:'Repos', type:'R'}, {label:'Repos', type:'R'}, {label:'Repos', type:'R'},
+    {label:'Repos', type:'R'}, {label:'Repos', type:'R'}, {label:'Repos', type:'R'}
+  ];
+  const PLANNING_COLORS = {S:'#2F6FA8', D:'#4C8C5A', SD:'#B08A3E', R:'#6B7B85'};
+
+  function planningStartFor(choice){ return PLANNING_ANCHORS[choice]; }
+  function planningIndexAt(date, anchor){
+    return Math.floor((date.getTime() - anchor.getTime()) / (24 * 60 * 60 * 1000));
+  }
+  function planningDayAt(date, anchor){
+    let idx = planningIndexAt(date, anchor) % PLANNING_CYCLE.length;
+    if(idx < 0) idx += PLANNING_CYCLE.length;
+    const start = new Date(anchor.getTime() + Math.floor((date.getTime() - anchor.getTime()) / (24*60*60*1000)) * 24*60*60*1000);
+    return {index:idx, item:PLANNING_CYCLE[idx], start};
+  }
+  function formatPlanningDate(d){
+    return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.', '');
+  }
+  function planningTypeLabel(type){
+    return type === 'S' ? 'Service' : type === 'D' ? 'Dispo' : type === 'SD' ? 'Super dispo' : 'Repos';
+  }
+  function updatePlanning(){
+    const anchor = planningStartFor(PLAN_CHOICE);
+    const now = new Date();
+    let day = planningDayAt(now, anchor);
+    // Le quart bascule exactement à 08:00 : avant 08:00, on est encore dans le quart de la veille.
+    if(now.getHours() < 8){
+      const before = new Date(now.getTime() - 24*60*60*1000);
+      day = planningDayAt(before, anchor);
+    }
+    const periodStart = new Date(day.start);
+    periodStart.setHours(8,0,0,0);
+    const periodEnd = new Date(periodStart.getTime() + 24*60*60*1000);
+    const item = day.item;
+    const status = planningTypeLabel(item.type);
+
+    const nextStart = periodEnd;
+    const nextDay = planningDayAt(new Date(nextStart.getTime() + 1000), anchor);
+
+    $('planningContent').innerHTML = `
+      <div class="planning-status">
+        <span class="planning-dot" style="background:${PLANNING_COLORS[item.type]}"></span>
+        <div>
+          <div class="planning-status-main">${item.label} — ${status}</div>
+          <div class="planning-sub">${formatPlanningDate(periodStart)} 08:00 → ${formatPlanningDate(periodEnd)} 08:00</div>
+        </div>
+      </div>
+      <div class="planning-next">Prochain : <strong>${nextDay.item.label} — ${planningTypeLabel(nextDay.item.type)}</strong> · ${formatPlanningDate(nextStart)} à 08:00</div>
+    `;
+  }
+
+  const chipData = {
+    arriveeVedette:[], arriveeEquipe:[],
+    departVedette:[], departEquipe:[],
+    mouvementVedette:[], mouvementEquipe:[],
+    corveeNumeros:[]
+  };
+
+  // -- catégories --
+  $('catRow').innerHTML = CATS.map(c => `<button type="button" class="cat-btn" data-key="${c.key}" style="--cat-color:${c.color}">${c.label}</button>`).join('');
+  $('catRow').addEventListener('click', e => {
+    const btn = e.target.closest('.cat-btn');
+    if(!btn) return;
+    selectCategory(btn.dataset.key);
+  });
+
+  function selectCategory(key, opts){
+    opts = opts || {};
+    activeCategoryKey = key;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+    ['arrivee','depart','mouvement','corvee'].forEach(k => { $('form-'+k).style.display = (k===key) ? '' : 'none'; });
+    $('categoryHint').style.display = 'none';
+    $('btnAdd').style.display = '';
+    if(!opts.preserveFields) clearFormFields(key);
+  }
+
+  // -- quais dépendants du secteur --
+  function quaiListFor(secteur){
+    if(secteur === 'Rouen') return ROUEN_QUAIS;
+    return null;
+  }
+  function refreshQuaiFieldVisibility(wrapperEl, secteur){
+    wrapperEl.style.display = quaiListFor(secteur) ? '' : 'none';
+  }
+  function quaiValueOf(inputEl, secteur){
+    return quaiListFor(secteur) ? inputEl.value.trim() : secteur;
+  }
+  function refreshAllQuaiSelects(){
+    const s = SERVICE_SECTEUR;
+    refreshQuaiFieldVisibility($('arriveeQuaiField'), s);
+    refreshQuaiFieldVisibility($('departQuaiField'), s);
+    refreshQuaiFieldVisibility($('mouvementQuaiDepartField'), s);
+    refreshQuaiFieldVisibility($('mouvementQuaiArriveeField'), s);
+  }
+
+  // -- similarité (Levenshtein) pour les suggestions de quai --
+  function levenshtein(a, b){
+    a = a.toLowerCase(); b = b.toLowerCase();
+    const m = a.length, n = b.length;
+    const dp = Array.from({length:m+1}, () => new Array(n+1).fill(0));
+    for(let i=0;i<=m;i++) dp[i][0]=i;
+    for(let j=0;j<=n;j++) dp[0][j]=j;
+    for(let i=1;i<=m;i++){
+      for(let j=1;j<=n;j++){
+        dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      }
+    }
+    return dp[m][n];
+  }
+  function rankQuais(query, list){
+    const q = query.trim().toLowerCase();
+    if(!q) return list;
+    return list.map(name => {
+      const n = name.toLowerCase();
+      let score;
+      if(n === q) score = -1000;
+      else if(n.startsWith(q)) score = -500 + (n.length - q.length);
+      else if(n.includes(q)) score = -200 + n.indexOf(q);
+      else score = levenshtein(q, n);
+      return {name, score};
+    }).sort((a,b) => a.score - b.score).slice(0,8).map(s => s.name);
+  }
+  function setupQuaiAutocomplete(inputId, boxId){
+    const input = $(inputId);
+    const box = $(boxId);
+    function render(){
+      const secteur = SERVICE_SECTEUR;
+      const list = quaiListFor(secteur);
+      if(!list){ box.style.display='none'; box.innerHTML=''; return; }
+      const matches = rankQuais(input.value, list);
+      if(!matches.length){ box.style.display='none'; box.innerHTML=''; return; }
+      box.innerHTML = matches.map(m => `<div class="quai-suggestion" data-value="${m}">${m}</div>`).join('');
+      box.style.display='block';
+    }
+    input.addEventListener('focus', render);
+    input.addEventListener('input', render);
+    input.addEventListener('blur', () => { setTimeout(() => { box.style.display='none'; }, 150); });
+    box.addEventListener('mousedown', e => e.preventDefault());
+    box.addEventListener('click', e => {
+      const s = e.target.closest('.quai-suggestion');
+      if(s){ input.value = s.dataset.value; box.style.display='none'; input.dispatchEvent(new Event('input', {bubbles:true})); input.dispatchEvent(new Event('change', {bubbles:true})); }
+    });
+  }
+  setupQuaiAutocomplete('arriveeQuai','arriveeQuaiSuggestions');
+  setupQuaiAutocomplete('departQuai','departQuaiSuggestions');
+  setupQuaiAutocomplete('mouvementQuaiDepart','mouvementQuaiDepartSuggestions');
+  setupQuaiAutocomplete('mouvementQuaiArrivee','mouvementQuaiArriveeSuggestions');
+  $('arriveeQuai').addEventListener('input', () => refreshArriveeTimeFields(SERVICE_SECTEUR));
+  $('arriveeQuai').addEventListener('change', () => refreshArriveeTimeFields(SERVICE_SECTEUR));
+  $('corveeType').addEventListener('change', refreshCorveeTimeFields);
+  function refreshArriveeTimeFields(secteur){
+    const quai = ($('arriveeQuai')?.value || '').trim();
+    const quaiSpecial = (quai === 'Le Trait' || quai === 'Qtsw');
+    const showCaudebec = (secteur === 'Rouen');
+    const showBouille = !quaiSpecial;
+    const showLamaneur = quaiSpecial;
+    $('arriveeCaudebecField').style.display = showCaudebec ? '' : 'none';
+    $('arriveeBouilleField').style.display = showBouille ? '' : 'none';
+    $('arriveeLamaneurField').style.display = showLamaneur ? '' : 'none';
+    if(quaiSpecial) setTimeSelectValue('arriveeHeureBouille','');
+    else setTimeSelectValue('arriveeHeureLamaneur','');
+  }
+
+  function refreshCorveeTimeFields(){
+    const type = $('corveeType').value;
+    const special = (type === 'Port Jérôme' || type === 'Honfleur' || type === 'Dieppe');
+    $('corveeLamaneurField').style.display = special ? '' : 'none';
+    document.querySelector('#form-corvee > .field:nth-of-type(2)').style.display = special ? 'none' : '';
+    if(special) setTimeSelectValue('corveeHeure','');
+    else setTimeSelectValue('corveeHeureLamaneur','');
+  }
+
+  // -- chips --
+  function renderChipList(prefix){
+    const list = $(prefix+'Chips');
+    list.innerHTML = chipData[prefix].map((n,i) => `<span class="chip">${n}<button type="button" class="chip-x" data-prefix="${prefix}" data-idx="${i}">×</button></span>`).join('');
+  }
+  function setupChip(prefix){
+    const input = $(prefix+'Input');
+    const btn = $(prefix+'Btn');
+    const list = $(prefix+'Chips');
+    function add(){
+      const v = input.value.trim();
+      if(v === '') return;
+      chipData[prefix].push(v);
+      input.value = '';
+      renderChipList(prefix);
+    }
+    btn.addEventListener('click', add);
+    input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); add(); } });
+    list.addEventListener('click', e => {
+      const x = e.target.closest('.chip-x');
+      if(x){ chipData[x.dataset.prefix].splice(Number(x.dataset.idx),1); renderChipList(x.dataset.prefix); }
+    });
+    renderChipList(prefix);
+  }
+  ['arriveeVedette','arriveeEquipe','departVedette','departEquipe','mouvementVedette','mouvementEquipe','corveeNumeros'].forEach(setupChip);
+  function resetChip(prefix){ chipData[prefix] = []; renderChipList(prefix); }
+
+  // -- AP toggles --
+  function wireApToggle(checkId, fieldId){
+    $(checkId).addEventListener('change', () => { $(fieldId).style.display = $(checkId).checked ? '' : 'none'; });
+  }
+  wireApToggle('arriveeApCheck','arriveeApField');
+  wireApToggle('departApCheck','departApField');
+  wireApToggle('mouvementApCheck','mouvementApField');
+
+  // -- reset des champs par catégorie --
+  function clearFormFields(key){
+    if(key === 'arrivee'){
+      $('arriveeQuai').value = '';
+      setTimeSelectValue('arriveeHeurePilote',''); setTimeSelectValue('arriveeHeureCaudebec',''); setTimeSelectValue('arriveeHeureBouille',''); setTimeSelectValue('arriveeHeureLamaneur','');
+      resetChip('arriveeVedette'); resetChip('arriveeEquipe');
+      $('arriveeApCheck').checked=false; $('arriveeApField').style.display='none'; $('arriveeApValue').selectedIndex=0;
+      $('arriveeRemarque').value='';
+    } else if(key === 'depart'){
+      $('departQuai').value = '';
+      setTimeSelectValue('departHeure','');
+      resetChip('departVedette'); resetChip('departEquipe');
+      $('departApCheck').checked=false; $('departApField').style.display='none'; $('departApValue').selectedIndex=0;
+      $('departRemarque').value='';
+    } else if(key === 'mouvement'){
+      $('mouvementQuaiDepart').value = ''; $('mouvementQuaiArrivee').value = '';
+      setTimeSelectValue('mouvementHeure','');
+      resetChip('mouvementVedette'); resetChip('mouvementEquipe');
+      $('mouvementApCheck').checked=false; $('mouvementApField').style.display='none';
+      $('mouvementApRetirer').selectedIndex=0; $('mouvementApRemettre').selectedIndex=0;
+      $('mouvementRemarque').value='';
+    } else if(key === 'corvee'){
+      $('corveeType').selectedIndex = 0;
+      setTimeSelectValue('corveeHeure',''); setTimeSelectValue('corveeHeureLamaneur','');
+      $('corveeLamaneurField').style.display='none';
+      document.querySelector('#form-corvee > .field:nth-of-type(2)').style.display='';
+      resetChip('corveeNumeros');
+      $('corveeRemarque').value='';
+    }
+  }
+
+  function updateHeader(){
+    $('headerTitle').textContent = `Bateau ${activeService.secteur}`;
+    $('headerSubtitle').textContent = activeService.label;
+  }
+
+  // -- stockage local (persiste une fois le fichier ouvert depuis l'écran d'accueil) --
+  function lsGet(key){
+    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+  }
+  function lsSet(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+  }
+
+  function loadAll(){
+    activeService = lsGet(keyFor('bateauActiveServiceV3'));
+    if(!activeService){
+      // migration : si un ancien jeu de données non isolé existe et que le choix est 17 (l'utilisateur historique), on le récupère une seule fois.
+      if(PLAN_CHOICE === '17'){
+        const legacyService = lsGet('bateauActiveServiceV3');
+        const legacyOps = lsGet('bateauOperationsV3');
+        if(legacyService){
+          activeService = legacyService;
+          persistActiveService();
+          if(legacyOps){ operations = legacyOps; persistOperations(); }
+        }
+      }
+      if(!activeService){ activeService = makeNewService('Rouen'); persistActiveService(); }
+    }
+    activeService.secteur = SERVICE_SECTEUR;
+    persistActiveService();
+    refreshAllQuaiSelects();
+    refreshArriveeTimeFields(SERVICE_SECTEUR);
+
+    if(!operations.length) operations = lsGet(keyFor('bateauOperationsV3')) || [];
+
+    updateHeader();
+    renderBoard();
+    renderHistory();
+  }
+  function persistActiveService(){ lsSet(keyFor('bateauActiveServiceV3'), activeService); }
+  function persistOperations(){ lsSet(keyFor('bateauOperationsV3'), operations.slice(0,500)); }
+
+  function makeNewService(secteur=SERVICE_SECTEUR){
+    const now = new Date();
+    return { id: now.getTime().toString(), label: `Service du ${now.toLocaleDateString('fr-FR')}`, secteur: secteur };
+  }
+  function pruneOldServices(){
+    const byLabel = {};
+    operations.forEach(o => {
+      if(o.serviceId === activeService.id) return;
+      const t = Number(o.serviceId) || 0;
+      if(!byLabel[o.serviceLabel] || t > byLabel[o.serviceLabel]) byLabel[o.serviceLabel] = t;
+    });
+    const labels = Object.keys(byLabel).sort((a,b) => byLabel[b] - byLabel[a]);
+    const keepLabels = new Set(labels.slice(0,3));
+    operations = operations.filter(o => o.serviceId === activeService.id || keepLabels.has(o.serviceLabel));
+  }
+
+  $('btnNewService').addEventListener('click', () => { $('newServiceConfirm').style.display = ''; });
+  $('newServiceNo').addEventListener('click', () => { $('newServiceConfirm').style.display = 'none'; });
+  $('newServiceYes').addEventListener('click', () => {
+    activeService = makeNewService(SERVICE_SECTEUR);
+    pruneOldServices();
+    persistActiveService();
+    $('newServiceConfirm').style.display = 'none';
+    updateHeader();
+    renderBoard();
+    renderHistory();
+    $('statusMsg').textContent = '';
+  });
+
+  // -- fenêtre modale --
+  const modalOverlay = $('modalOverlay');
+  function openModal(){
+    modalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(){
+    modalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    activeCategoryKey = null;
+    editingId = null;
+    $('editingBanner').style.display = 'none';
+    $('btnAdd').textContent = 'Ajouter';
+    $('btnAdd').style.display = 'none';
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    ['arrivee','depart','mouvement','corvee'].forEach(k => { $('form-'+k).style.display = 'none'; });
+    $('categoryHint').style.display = '';
+    $('statusMsg').textContent = '';
+  }
+  $('btnOpenAdd').addEventListener('click', () => { closeModal(); openModal(); });
+  $('btnCloseModal').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', e => { if(e.target === modalOverlay) closeModal(); });
+
+  // -- soumission (ajout ou mise à jour) --
+  $('btnAdd').addEventListener('click', submitOperation);
+  function submitOperation(){
+    const status = $('statusMsg');
+    if(!activeCategoryKey){ status.textContent = 'Choisis une catégorie.'; return; }
+    const secteur = SERVICE_SECTEUR;
+    const catMeta = CATS.find(c => c.key === activeCategoryKey);
+    const entry = {
+      id: editingId || (Date.now().toString() + Math.random().toString(36).slice(2,6)),
+      serviceId: activeService.id, serviceLabel: activeService.label, secteur: activeService.secteur,
+      categorieKey: activeCategoryKey, categorie: catMeta.label
+    };
+
+    if(activeCategoryKey === 'arrivee'){
+      const quai = quaiValueOf($('arriveeQuai'), secteur);
+      if(!quai){ status.textContent = 'Choisis un quai.'; return; }
+      entry.quai = quai;
+      entry.heurePilote = $('arriveeHeurePilote').value;
+      entry.heureCaudebec = $('arriveeHeureCaudebec').value;
+      entry.heureBouille = $('arriveeHeureBouille').value;
+      entry.heureLamaneur = $('arriveeHeureLamaneur').value;
+      entry.vedette = [...chipData.arriveeVedette];
+      entry.equipeTerre = [...chipData.arriveeEquipe];
+      entry.apEnabled = $('arriveeApCheck').checked;
+      entry.apValue = entry.apEnabled ? $('arriveeApValue').value : null;
+      entry.remarque = $('arriveeRemarque').value.trim();
+    } else if(activeCategoryKey === 'depart'){
+      const quai = quaiValueOf($('departQuai'), secteur);
+      if(!quai){ status.textContent = 'Choisis un quai.'; return; }
+      entry.quai = quai;
+      entry.heureOperation = $('departHeure').value;
+      entry.vedette = [...chipData.departVedette];
+      entry.equipeTerre = [...chipData.departEquipe];
+      entry.apEnabled = $('departApCheck').checked;
+      entry.apValue = entry.apEnabled ? $('departApValue').value : null;
+      entry.remarque = $('departRemarque').value.trim();
+    } else if(activeCategoryKey === 'mouvement'){
+      const qd = quaiValueOf($('mouvementQuaiDepart'), secteur);
+      const qa = quaiValueOf($('mouvementQuaiArrivee'), secteur);
+      if(!qd || !qa){ status.textContent = 'Choisis les deux quais.'; return; }
+      entry.quaiDepart = qd; entry.quaiArrivee = qa;
+      entry.heureOperation = $('mouvementHeure').value;
+      entry.vedette = [...chipData.mouvementVedette];
+      entry.equipeTerre = [...chipData.mouvementEquipe];
+      entry.apEnabled = $('mouvementApCheck').checked;
+      entry.apRetirer = entry.apEnabled ? $('mouvementApRetirer').value : null;
+      entry.apRemettre = entry.apEnabled ? $('mouvementApRemettre').value : null;
+      entry.remarque = $('mouvementRemarque').value.trim();
+    } else if(activeCategoryKey === 'corvee'){
+      const type = $('corveeType').value;
+      if(!type){ status.textContent = 'Choisis un type de corvée.'; return; }
+      entry.typeCorvee = type;
+      entry.heureOperation = $('corveeHeure').value;
+      entry.heureLamaneur = $('corveeHeureLamaneur').value;
+      entry.numeros = [...chipData.corveeNumeros];
+      entry.remarque = $('corveeRemarque').value.trim();
+    }
+
+    status.textContent = '';
+
+    if(editingId){
+      const idx = operations.findIndex(o => o.id === editingId);
+      if(idx > -1) operations[idx] = entry; else operations.unshift(entry);
+    } else {
+      operations.unshift(entry);
+    }
+    persistOperations();
+    renderBoard();
+    renderHistory();
+    closeModal();
+    const toast = $('toastMsg');
+    toast.textContent = 'Enregistré ✓';
+    setTimeout(() => toast.textContent = '', 1500);
+  }
+
+  $('btnCancelEdit').addEventListener('click', closeModal);
+
+  function setQuaiValueIfPresent(inputEl, value, secteur){
+    if(quaiListFor(secteur)) inputEl.value = value;
+  }
+
+  function loadEntryForEdit(o){
+    openModal();
+    selectCategory(o.categorieKey, {preserveFields:true});
+    const secteur = activeService.secteur;
+    if(o.categorieKey === 'arrivee'){
+      setQuaiValueIfPresent($('arriveeQuai'), o.quai, secteur);
+      setTimeSelectValue('arriveeHeurePilote', o.heurePilote || '');
+      setTimeSelectValue('arriveeHeureCaudebec', o.heureCaudebec || '');
+      setTimeSelectValue('arriveeHeureBouille', o.heureBouille || '');
+      setTimeSelectValue('arriveeHeureLamaneur', o.heureLamaneur || '');
+      chipData.arriveeVedette = [...(o.vedette||[])]; renderChipList('arriveeVedette');
+      chipData.arriveeEquipe = [...(o.equipeTerre||[])]; renderChipList('arriveeEquipe');
+      $('arriveeApCheck').checked = !!o.apEnabled;
+      $('arriveeApField').style.display = o.apEnabled ? '' : 'none';
+      if(o.apEnabled) $('arriveeApValue').value = o.apValue;
+      $('arriveeRemarque').value = o.remarque || '';
+    } else if(o.categorieKey === 'depart'){
+      setQuaiValueIfPresent($('departQuai'), o.quai, secteur);
+      setTimeSelectValue('departHeure', o.heureOperation || '');
+      chipData.departVedette = [...(o.vedette||[])]; renderChipList('departVedette');
+      chipData.departEquipe = [...(o.equipeTerre||[])]; renderChipList('departEquipe');
+      $('departApCheck').checked = !!o.apEnabled;
+      $('departApField').style.display = o.apEnabled ? '' : 'none';
+      if(o.apEnabled) $('departApValue').value = o.apValue;
+      $('departRemarque').value = o.remarque || '';
+    } else if(o.categorieKey === 'mouvement'){
+      setQuaiValueIfPresent($('mouvementQuaiDepart'), o.quaiDepart, secteur);
+      setQuaiValueIfPresent($('mouvementQuaiArrivee'), o.quaiArrivee, secteur);
+      setTimeSelectValue('mouvementHeure', o.heureOperation || '');
+      chipData.mouvementVedette = [...(o.vedette||[])]; renderChipList('mouvementVedette');
+      chipData.mouvementEquipe = [...(o.equipeTerre||[])]; renderChipList('mouvementEquipe');
+      $('mouvementApCheck').checked = !!o.apEnabled;
+      $('mouvementApField').style.display = o.apEnabled ? '' : 'none';
+      if(o.apEnabled){ $('mouvementApRetirer').value = o.apRetirer; $('mouvementApRemettre').value = o.apRemettre; }
+      $('mouvementRemarque').value = o.remarque || '';
+    } else if(o.categorieKey === 'corvee'){
+      $('corveeType').value = o.typeCorvee || '';
+      setTimeSelectValue('corveeHeure', o.heureOperation || '');
+      setTimeSelectValue('corveeHeureLamaneur', o.heureLamaneur || '');
+      refreshCorveeTimeFields();
+      chipData.corveeNumeros = [...(o.numeros||[])]; renderChipList('corveeNumeros');
+      $('corveeRemarque').value = o.remarque || '';
+    }
+    editingId = o.id;
+    $('editingBanner').style.display = '';
+    $('btnAdd').textContent = 'Mettre à jour';
+  }
+
+  // -- affichage --
+  function formatOpMain(o){
+    if(o.categorieKey === 'arrivee'){
+      const parts = [];
+      if(o.heurePilote) parts.push('Pilote '+o.heurePilote);
+      if(o.heureCaudebec) parts.push('Caudebec '+o.heureCaudebec);
+      if(o.heureBouille) parts.push('Bouille '+o.heureBouille);
+      if(o.heureLamaneur) parts.push('Lamaneur sur place '+o.heureLamaneur);
+      return `${o.quai}${parts.length ? ' — '+parts.join(' · ') : ''}`;
+    }
+    if(o.categorieKey === 'depart') return `${o.quai}${o.heureOperation ? ' — '+o.heureOperation : ''}`;
+    if(o.categorieKey === 'mouvement') return `${o.quaiDepart} → ${o.quaiArrivee}${o.heureOperation ? ' — '+o.heureOperation : ''}`;
+    if(o.categorieKey === 'corvee') return `${o.typeCorvee}${o.heureLamaneur ? ' — Lamaneur sur place '+o.heureLamaneur : (o.heureOperation ? ' — '+o.heureOperation : '')}`;
+    return '';
+  }
+  function formatOpDetailParts(o){
+    const mainBits = [];
+    let apText = '';
+    if(o.categorieKey === 'corvee'){
+      if(o.numeros && o.numeros.length) mainBits.push('Numéros '+o.numeros.join(', '));
+    } else {
+      if(o.vedette && o.vedette.length) mainBits.push('Vedette '+o.vedette.join(', '));
+      if(o.equipeTerre && o.equipeTerre.length) mainBits.push('Équipe '+o.equipeTerre.join(', '));
+      if(o.apEnabled){
+        if(o.categorieKey === 'mouvement') apText = `AP -${o.apRetirer} / +${o.apRemettre}`;
+        else if(o.categorieKey === 'arrivee') apText = 'AP +'+o.apValue;
+        else if(o.categorieKey === 'depart') apText = 'AP -'+o.apValue;
+      }
+    }
+    if(o.remarque) mainBits.push(o.remarque);
+    return { main: mainBits.join(' · '), ap: apText };
+  }
+  function detailRowHtml(o){
+    const {main, ap} = formatOpDetailParts(o);
+    if(!main && !ap) return '';
+    return `<div class="op-detail-row"><span class="op-detail-main">${main}</span>${ap ? `<span class="op-detail-ap">${ap}</span>` : ''}</div>`;
+  }
+  function getSortTime(o){
+    if(o.categorieKey === 'arrivee') return o.heureBouille || o.heureLamaneur || o.heureCaudebec || o.heurePilote || '';
+    return o.heureOperation || o.heureLamaneur || '';
+  }
+
+  function renderOpRow(o){
+    if(pendingDelete.has(o.id)){
+      return `<div class="op-row-confirm" data-id="${o.id}">
+        <div class="op-confirm-text">Supprimer cette opération ?</div>
+        <div class="op-confirm-actions">
+          <button type="button" class="op-confirm-yes" data-id="${o.id}">Confirmer</button>
+          <button type="button" class="op-confirm-no" data-id="${o.id}">Annuler</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="op-row" data-id="${o.id}">
+      <div class="op-main" data-id="${o.id}">
+        <div>${formatOpMain(o)}</div>
+        ${detailRowHtml(o)}
+      </div>
+      <button type="button" class="op-trash" data-id="${o.id}" title="Supprimer">🗑</button>
+    </div>`;
+  }
+
+  function renderBoard(){
+    const board = $('board');
+    const current = operations.filter(o => o.serviceId === activeService.id);
+    if(!current.length){
+      board.innerHTML = '<div class="empty-history">Aucune opération notée pour ce service.</div>';
+    } else {
+      board.innerHTML = CATS.map(cat => {
+        const items = current.filter(o => o.categorieKey === cat.key).sort((a,b) => getSortTime(a).localeCompare(getSortTime(b)));
+        if(!items.length) return '';
+        return `<div class="cat-group" style="--cat-color:${cat.color}">
+          <div class="cat-group-title">${cat.label}</div>
+          ${items.map(renderOpRow).join('')}
+        </div>`;
+      }).join('');
+    }
+    board.onclick = (e) => {
+      const trash = e.target.closest('.op-trash');
+      const yes = e.target.closest('.op-confirm-yes');
+      const no = e.target.closest('.op-confirm-no');
+      const main = e.target.closest('.op-main');
+      if(trash){ pendingDelete.add(trash.dataset.id); renderBoard(); return; }
+      if(yes){
+        const id = yes.dataset.id;
+        operations = operations.filter(o => o.id !== id);
+        pendingDelete.delete(id);
+        persistOperations();
+        renderBoard(); renderHistory();
+        return;
+      }
+      if(no){ pendingDelete.delete(no.dataset.id); renderBoard(); return; }
+      if(main){
+        const o = operations.find(x => x.id === main.dataset.id);
+        if(o) loadEntryForEdit(o);
+      }
+    };
+  }
+
+  function renderHistory(){
+    const el = $('serviceHistory');
+    const past = operations.filter(o => o.serviceId !== activeService.id);
+    if(!past.length){ el.innerHTML = '<div class="empty-history">Pas encore d\'ancien service.</div>'; return; }
+    const byLabel = {};
+    past.forEach(o => {
+      const key = o.serviceLabel;
+      if(!byLabel[key]) byLabel[key] = {label:o.serviceLabel, secteur:o.secteur, count:0, serviceIds:new Set(), maxId:0};
+      const g = byLabel[key];
+      g.count++;
+      g.serviceIds.add(o.serviceId);
+      g.maxId = Math.max(g.maxId, Number(o.serviceId) || 0);
+    });
+    const list = Object.values(byLabel).sort((a,b) => b.maxId - a.maxId).slice(0,3);
+    el.innerHTML = list.map(s => {
+      const isOpen = expandedServiceId === s.label;
+      let detail = '';
+      if(isOpen){
+        const items = past.filter(o => s.serviceIds.has(o.serviceId));
+        detail = '<div class="history-detail">' + CATS.map(cat => {
+          const catItems = items.filter(o => o.categorieKey === cat.key).sort((a,b) => getSortTime(a).localeCompare(getSortTime(b)));
+          if(!catItems.length) return '';
+          return `<div class="cat-group" style="--cat-color:${cat.color}">
+            <div class="cat-group-title">${cat.label}</div>
+            ${catItems.map(o => `<div class="history-op-row"><div>${formatOpMain(o)}</div>${detailRowHtml(o)}</div>`).join('')}
+          </div>`;
+        }).join('') + '</div>';
+      }
+      return `<div class="history-item" data-label="${s.label}">
+        <div class="history-left"><span class="lieu">${s.label}</span><span class="date">${s.secteur}</span></div>
+        <div class="history-total">${s.count} opération${s.count>1?'s':''}</div>
+      </div>${detail}`;
+    }).join('');
+    el.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        expandedServiceId = (expandedServiceId === item.dataset.label) ? null : item.dataset.label;
+        renderHistory();
+      });
+    });
+  }
+
+  // -- marée de Rouen (données réelles septembre-octobre 2026, source Météo Consult Marine / SHOM) --
+  // format par événement : [type ('BM' ou 'PM'), mois, jour, heure, minute, coefficient]
+  const TIDE_EVENTS_RAW = [
+['BM',9,1,1,52,89],
+['PM',9,1,4,46,89],
+['BM',9,1,14,6,85],
+['PM',9,1,17,7,85],
+['BM',9,2,2,25,81],
+['PM',9,2,5,22,81],
+['BM',9,2,14,38,75],
+['PM',9,2,17,40,75],
+['BM',9,3,2,57,69],
+['PM',9,3,5,57,69],
+['BM',9,3,15,9,62],
+['PM',9,3,18,15,62],
+['BM',9,4,3,31,55],
+['PM',9,4,6,38,55],
+['BM',9,4,15,47,48],
+['PM',9,4,18,58,48],
+['BM',9,5,4,16,43],
+['PM',9,5,7,34,43],
+['BM',9,5,16,38,40],
+['PM',9,5,20,4,40],
+['BM',9,6,5,23,41],
+['PM',9,6,9,11,41],
+['BM',9,6,18,9,45],
+['PM',9,6,21,59,45],
+['BM',9,7,7,19,52],
+['PM',9,7,11,2,52],
+['BM',9,7,20,3,60],
+['PM',9,7,23,34,60],
+['BM',9,8,8,47,68],
+['PM',9,8,12,21,68],
+['BM',9,8,21,22,76],
+['PM',9,9,0,42,76],
+['BM',9,9,10,1,76],
+['PM',9,9,13,19,83],
+['BM',9,9,22,34,83],
+['PM',9,10,1,35,90],
+['BM',9,10,11,7,90],
+['PM',9,10,14,7,95],
+['BM',9,10,23,32,95],
+['PM',9,11,2,21,98],
+['BM',9,11,11,58,98],
+['PM',9,11,14,50,101],
+['BM',9,12,0,17,102],
+['PM',9,12,3,3,102],
+['BM',9,12,12,38,101],
+['PM',9,12,15,25,101],
+['BM',9,13,0,53,100],
+['PM',9,13,3,37,100],
+['BM',9,13,13,10,97],
+['PM',9,13,15,59,97],
+['BM',9,14,1,23,93],
+['PM',9,14,4,9,93],
+['BM',9,14,13,39,89],
+['PM',9,14,16,30,89],
+['BM',9,15,1,51,83],
+['PM',9,15,4,42,83],
+['BM',9,15,14,4,77],
+['PM',9,15,16,59,77],
+['BM',9,16,2,16,70],
+['PM',9,16,5,11,70],
+['BM',9,16,14,27,63],
+['PM',9,16,17,27,63],
+['BM',9,17,2,37,56],
+['PM',9,17,5,40,56],
+['BM',9,17,14,46,49],
+['PM',9,17,17,54,49],
+['BM',9,18,2,59,41],
+['PM',9,18,6,11,41],
+['BM',9,18,15,10,35],
+['PM',9,18,18,26,35],
+['BM',9,19,3,33,28],
+['PM',9,19,6,52,28],
+['BM',9,19,15,49,24],
+['PM',9,19,19,15,24],
+['BM',9,20,4,26,22],
+['PM',9,20,8,9,22],
+['BM',9,20,17,3,24],
+['PM',9,20,20,59,24],
+['BM',9,21,6,5,29],
+['PM',9,21,10,16,29],
+['BM',9,21,19,13,35],
+['PM',9,21,22,51,35],
+['BM',9,22,7,59,42],
+['PM',9,22,11,43,42],
+['BM',9,22,20,41,50],
+['PM',9,23,0,1,50],
+['BM',9,23,9,4,50],
+['PM',9,23,12,35,57],
+['BM',9,23,21,35,57],
+['PM',9,24,0,48,64],
+['BM',9,24,9,56,64],
+['PM',9,24,13,16,71],
+['BM',9,24,22,20,71],
+['PM',9,25,1,28,77],
+['BM',9,25,10,41,77],
+['PM',9,25,13,52,82],
+['BM',9,25,23,3,82],
+['PM',9,26,2,5,87],
+['BM',9,26,11,23,87],
+['PM',9,26,14,28,92],
+['BM',9,26,23,42,92],
+['PM',9,27,2,42,95],
+['BM',9,27,12,0,95],
+['PM',9,27,15,2,97],
+['BM',9,28,0,19,99],
+['PM',9,28,3,15,99],
+['BM',9,28,12,35,99],
+['PM',9,28,15,35,99],
+['BM',9,29,0,55,98],
+['PM',9,29,3,50,98],
+['BM',9,29,13,10,96],
+['PM',9,29,16,8,96],
+['BM',9,30,1,29,92],
+['PM',9,30,4,26,92],
+['BM',9,30,13,44,88],
+['PM',9,30,16,43,88],
+['BM',10,1,2,3,82],
+['PM',10,1,5,3,82],
+['BM',10,1,14,16,75],
+['PM',10,1,17,19,75],
+['BM',10,2,2,38,68],
+['PM',10,2,5,43,68],
+['BM',10,2,14,51,60],
+['PM',10,2,17,58,60],
+['BM',10,3,3,15,53],
+['PM',10,3,6,30,53],
+['BM',10,3,15,30,46],
+['PM',10,3,18,48,46],
+['BM',10,4,4,2,41],
+['PM',10,4,7,34,41],
+['BM',10,4,16,26,40],
+['PM',10,4,20,3,40],
+['BM',10,5,5,20,43],
+['PM',10,5,9,21,43],
+['BM',10,5,18,18,48],
+['PM',10,5,21,57,48],
+['BM',10,6,7,19,55],
+['PM',10,6,10,55,55],
+['BM',10,6,20,0,62],
+['PM',10,6,23,20,62],
+['BM',10,7,8,40,70],
+['PM',10,7,12,5,70],
+['BM',10,7,21,14,77],
+['PM',10,8,0,23,77],
+['BM',10,8,9,47,77],
+['PM',10,8,12,58,83],
+['BM',10,8,22,16,83],
+['PM',10,9,1,14,87],
+['BM',10,9,10,44,87],
+['PM',10,9,13,43,91],
+['BM',10,9,23,7,91],
+['PM',10,10,1,56,94],
+['BM',10,10,11,29,94],
+['PM',10,10,14,22,95],
+['BM',10,10,23,47,95],
+['PM',10,11,2,37,95],
+['BM',10,11,12,5,95],
+['PM',10,11,14,58,95],
+['BM',10,12,0,21,93],
+['PM',10,12,3,11,93],
+['BM',10,12,12,35,91],
+['PM',10,12,15,29,91],
+['BM',10,13,0,51,88],
+['PM',10,13,3,43,88],
+['BM',10,13,13,3,83],
+['PM',10,13,15,59,83],
+['BM',10,14,1,18,79],
+['PM',10,14,4,14,79],
+['BM',10,14,13,29,74],
+['PM',10,14,16,27,74],
+['BM',10,15,1,44,68],
+['PM',10,15,4,43,68],
+['BM',10,15,13,54,62],
+['PM',10,15,16,55,62],
+['BM',10,16,2,6,56],
+['PM',10,16,5,13,56],
+['BM',10,16,14,17,50],
+['PM',10,16,17,23,50],
+['BM',10,17,2,31,43],
+['PM',10,17,5,44,43],
+['BM',10,17,14,43,37],
+['PM',10,17,17,55,37],
+['BM',10,18,3,4,32],
+['PM',10,18,6,24,32],
+['BM',10,18,15,20,28],
+['PM',10,18,18,41,28],
+['BM',10,19,3,51,25],
+['PM',10,19,7,26,25],
+['BM',10,19,16,23,26],
+['PM',10,19,19,58,26],
+['BM',10,20,5,11,29],
+['PM',10,20,9,20,29],
+['BM',10,20,18,9,34],
+['PM',10,20,21,52,34],
+['BM',10,21,6,55,41],
+['PM',10,21,10,43,41],
+['BM',10,21,19,43,48],
+['PM',10,21,23,5,48],
+['BM',10,22,8,11,55],
+['PM',10,22,11,43,55],
+['BM',10,22,20,45,62],
+['PM',10,23,0,1,62],
+['BM',10,23,9,7,62],
+['PM',10,23,12,30,69],
+['BM',10,23,21,35,69],
+['PM',10,24,0,46,76],
+['BM',10,24,9,57,76],
+['PM',10,24,13,12,82],
+['BM',10,24,22,22,82],
+['PM',10,25,1,29,87],
+['BM',10,25,9,41,87],
+['PM',10,25,12,47,92],
+['BM',10,25,22,5,92],
+['PM',10,26,1,5,95],
+['BM',10,26,10,24,95],
+['PM',10,26,13,28,98],
+['BM',10,26,22,49,98],
+['PM',10,27,1,48,99],
+['BM',10,27,11,7,99],
+['PM',10,27,14,8,100],
+['BM',10,27,23,31,100],
+['PM',10,28,2,33,99],
+['BM',10,28,11,48,99],
+['PM',10,28,14,50,96],
+['BM',10,29,0,12,93],
+['PM',10,29,3,13,93],
+['BM',10,29,12,26,88],
+['PM',10,29,15,29,88],
+['BM',10,30,0,50,82],
+['PM',10,30,3,56,82],
+['BM',10,30,13,3,76],
+['PM',10,30,16,10,76],
+['BM',10,31,1,28,69],
+['PM',10,31,4,42,69],
+['BM',10,31,13,42,62],
+['PM',10,31,16,56,62]
+];
+  const TIDE_YEAR = 2026;
+  const TIDE_EVENTS = TIDE_EVENTS_RAW.map(e => ({
+    type: e[0],
+    date: new Date(TIDE_YEAR, e[1]-1, e[2], e[3], e[4], 0, 0),
+    coef: e[5]
+  }));
+
+  function formatTideTime(d){
+    return d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+  function formatTideRemaining(ms){
+    const totalMin = Math.round(ms/60000);
+    const h = Math.floor(totalMin/60), m = totalMin%60;
+    return `+${h}h${String(m).padStart(2,'0')}`;
+  }
+  function renderTide(){
+    const el = $('tideCard');
+    const now = new Date();
+    if(now < TIDE_EVENTS[0].date || now > TIDE_EVENTS[TIDE_EVENTS.length-1].date){
+      el.innerHTML = `<div class="empty-history">Données de marée non disponibles pour cette période (données embarquées : sept.-oct. 2026). Une mise à jour du fichier sera nécessaire.</div>`;
+      return;
+    }
+    let last = TIDE_EVENTS[0], next = TIDE_EVENTS[1];
+    for(let i=0;i<TIDE_EVENTS.length-1;i++){
+      if(TIDE_EVENTS[i].date <= now && TIDE_EVENTS[i+1].date > now){
+        last = TIDE_EVENTS[i]; next = TIDE_EVENTS[i+1];
+        break;
+      }
+    }
+    const montante = last.type === 'BM';
+    const progress = Math.min(1, Math.max(0, (now - last.date) / (next.date - last.date)));
+    const remaining = formatTideRemaining(next.date - now);
+
+    el.innerHTML = `
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;">
+        En ce moment : ${montante ? 'Marée montante' : 'Marée descendante'}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:12.5px;color:var(--muted);white-space:nowrap;">${last.type} · ${formatTideTime(last.date)}</div>
+        <div style="flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;">
+          <div style="position:absolute;top:50%;left:${(progress*100).toFixed(1)}%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--brass);border:2px solid #fff;box-shadow:0 0 0 1px var(--brass);"></div>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted);white-space:nowrap;">${next.type} · ${formatTideTime(next.date)}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;">
+        <div style="font-size:12px;color:var(--brass-dark);font-weight:600;">Coef ${last.coef}</div>
+        <div style="font-size:12.5px;color:var(--navy-ink);font-weight:700;">${remaining}</div>
+        <div style="font-size:12px;color:var(--brass-dark);font-weight:600;">Coef ${next.coef}</div>
+      </div>
+    `;
+  }
+
+  // -- notification "période chargée" (4 opérations ou plus en 1h, alerte 20 min avant) --
+  function playDingDing(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      function beep(delay){
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.25);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.3);
+      }
+      beep(0);
+      beep(0.35);
+    }catch(e){}
+  }
+  function operationDateTime(heureStr, serviceStartDate){
+    if(!heureStr) return null;
+    const parts = heureStr.split(':');
+    if(parts.length !== 2) return null;
+    const h = Number(parts[0]), m = Number(parts[1]);
+    const d = new Date(serviceStartDate);
+    d.setHours(0,0,0,0);
+    if(h < 8) d.setDate(d.getDate()+1);
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+  function computeBusyPeriods(){
+    if(!activeService) return [];
+    const serviceStart = new Date(Number(activeService.id));
+    const current = operations.filter(o => o.serviceId === activeService.id);
+    const byHour = {};
+    current.forEach(o => {
+      const t = getSortTime(o);
+      const dt = operationDateTime(t, serviceStart);
+      if(!dt) return;
+      const hk = dt.getHours();
+      if(!byHour[hk]) byHour[hk] = [];
+      byHour[hk].push(dt);
+    });
+    const busy = [];
+    Object.keys(byHour).forEach(hk => {
+      const arr = byHour[hk];
+      if(arr.length >= 4){
+        const bucketStart = new Date(arr[0]); bucketStart.setMinutes(0,0,0);
+        busy.push({hour:Number(hk), count:arr.length, start:bucketStart, key: bucketStart.toISOString()});
+      }
+    });
+    return busy;
+  }
+  function showBusyNotification(b){
+    const hourLabel = String(b.hour).padStart(2,'0')+'h';
+    const nextHourLabel = String((b.hour+1)%24).padStart(2,'0')+'h';
+    const el = document.createElement('div');
+    el.className = 'busy-alert';
+    el.innerHTML = `<div class="busy-alert-icon">\u26A0\uFE0F</div><div style="flex:1;"><div class="busy-alert-title">P\u00e9riode charg\u00e9e</div><div class="busy-alert-sub">${b.count} op\u00e9rations entre ${hourLabel} et ${nextHourLabel}</div></div><button type="button" class="busy-alert-close">\u00d7</button>`;
+    document.body.appendChild(el);
+    el.querySelector('.busy-alert-close').addEventListener('click', () => el.remove());
+    setTimeout(() => { if(el.parentNode) el.remove(); }, 20000);
+    playDingDing();
+  }
+  function checkBusyNotifications(){
+    if(!activeService) return;
+    const notifiedKey = keyFor('bateauNotifiedBuckets') + '_' + activeService.id;
+    let notified = new Set(lsGet(notifiedKey) || []);
+    const busy = computeBusyPeriods();
+    const now = new Date();
+    let changed = false;
+    busy.forEach(b => {
+      const triggerTime = new Date(b.start.getTime() - 20*60000);
+      if(now >= triggerTime && now < b.start && !notified.has(b.key)){
+        showBusyNotification(b);
+        notified.add(b.key);
+        changed = true;
+      }
+    });
+    if(changed) lsSet(notifiedKey, [...notified]);
+  }
+
+  // -- démarrage : choix du planning (isolation totale des données par num\u00e9ro) --
+  function initApp(){
+    loadAll();
+    updatePlanning();
+    setInterval(updatePlanning, 30000);
+    renderTide();
+    setInterval(renderTide, 60000);
+    checkBusyNotifications();
+    setInterval(checkBusyNotifications, 20000);
+  }
+
+  const storedPlan = localStorage.getItem('bateauPlanningChoice');
+  if(storedPlan === '7' || storedPlan === '17'){
+    PLAN_CHOICE = storedPlan;
+    $('planningChooser').style.display = 'none';
+    $('planningContent').style.display = '';
+    initApp();
+  } else {
+    $('planningChooser').style.display = '';
+    $('planningContent').style.display = 'none';
+    function choosePlan(choice){
+      PLAN_CHOICE = choice;
+      localStorage.setItem('bateauPlanningChoice', choice);
+      $('planningChooser').style.display = 'none';
+      $('planningContent').style.display = '';
+      initApp();
+    }
+    $('btnPlan7').addEventListener('click', () => choosePlan('7'));
+    $('btnPlan17').addEventListener('click', () => choosePlan('17'));
+  }
+})();
+</script>
+</body>
+</html>
