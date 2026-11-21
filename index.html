@@ -228,6 +228,9 @@
   .op-tag.chain{background:var(--chain-bg);color:var(--chain-text);font-weight:700;}
   .lamope-tap,.history-lamope-row{cursor:pointer;}
   .forecast{color:var(--muted-2);}
+  .cover-when{margin:4px 0 6px;} .cover-when-lab{font-size:11px;color:var(--muted);font-weight:700;margin:8px 0 2px;}
+  .cover-when-row{display:flex;gap:12px;align-items:flex-end;}
+  .cover-date{flex:1.3;min-width:0;box-sizing:border-box;border:none;border-bottom:2px solid var(--navy-ink);background:none;padding:6px 2px;font-size:15px;color:var(--navy-ink);font-family:inherit;}
   :root{--conge:#C2543B;--conge-bg:#FBEDE8;}
   body.dark-mode{--conge:#EE8B73;--conge-bg:#3A221C;}
   .mini-card.conge{background:var(--conge-bg);}
@@ -235,7 +238,6 @@
   .cover-choice.conge-choice{border-color:var(--conge);color:var(--conge);}
   .conge-current{background:var(--conge-bg);}
   .conge-date{width:100%;box-sizing:border-box;border:none;border-bottom:2px solid var(--navy-ink);background:none;padding:6px 2px;font-size:15px;color:var(--navy-ink);font-family:inherit;}
-  .cover-date{width:100%;box-sizing:border-box;border:none;border-bottom:2px solid var(--navy-ink);background:none;padding:6px 2px;font-size:15px;color:var(--navy-ink);font-family:inherit;}
   .conge-sum{background:var(--conge-bg);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--navy-ink);line-height:1.5;margin:6px 0 10px;}
   .repos-cover-btn.conge-cancel{border-color:var(--conge);color:var(--conge);}
   .td-day{margin-top:14px;}
@@ -369,6 +371,16 @@
   body.dark-mode .role-ic.man{background:#1A2E22;color:#7FD1A0;}
   .role-arrow{font-size:10px;color:var(--muted-2);}
   .roster-chip.me{border-width:1.5px;border-color:var(--brass);font-weight:800;}
+  :root{--ps-bg:#DDEBFA;--ps-tx:#1B5A96;--ps-bd:#8DB7E3;--pd-bg:#FCE1E0;--pd-tx:#B3261E;--pd-bd:#E8958F;--pg-bg:#DDF0E3;--pg-tx:#2A7048;--pg-bd:#8CC7A1;}
+  body.dark-mode{--ps-bg:#1B3350;--ps-tx:#9CC6F0;--ps-bd:#3D6A9C;--pd-bg:#4A2220;--pd-tx:#FFB1AB;--pd-bd:#8E4540;--pg-bg:#1D3A2A;--pg-tx:#A5DDB8;--pg-bd:#3F7A58;}
+  .chip.p-S,.roster-chip.p-S{background:var(--ps-bg);border-color:var(--ps-bd);color:var(--ps-tx);}
+  .chip.p-D,.roster-chip.p-D{background:var(--pd-bg);border-color:var(--pd-bd);color:var(--pd-tx);}
+  .chip.p-SD,.roster-chip.p-SD{background:var(--pg-bg);border-color:var(--pg-bd);color:var(--pg-tx);}
+  .chip.p-S .chip-x,.chip.p-D .chip-x,.chip.p-SD .chip-x{color:inherit;}
+  .roster-chip.me.p-S{border-color:var(--ps-tx);}.roster-chip.me.p-D{border-color:var(--pd-tx);}.roster-chip.me.p-SD{border-color:var(--pg-tx);}
+  .roster-grp{margin-top:3px;}
+  .pn{font-weight:700;}
+  .pn.p-S{color:var(--ps-tx);}.pn.p-D{color:var(--pd-tx);}.pn.p-SD{color:var(--pg-tx);}
   .tide-skel div{height:10px;background:var(--track);border-radius:4px;margin:6px 0;animation:skelPulse 1.1s ease-in-out infinite;}
   .tide-skel div:nth-child(1){width:55%;} .tide-skel div:nth-child(2){width:40%;height:16px;} .tide-skel div:nth-child(3){width:75%;}
   @keyframes skelPulse{0%,100%{opacity:1}50%{opacity:.45}}
@@ -832,22 +844,15 @@
   function addMinutesHHMM(t, m){
     if(!t || !/^\d{2}:\d{2}$/.test(t)) return '';
     const [h, mi] = t.split(':').map(Number);
-    const tot = (((h*60 + mi + m) % 1440) + 1440) % 1440;
-    return String(Math.floor(tot/60)).padStart(2,'0') + ':' + String(tot%60).padStart(2,'0');
-  }
-  function addMinutesFc(t, m){
-    const r = addMinutesHHMM(t, m);
-    if(!r) return '';
-    const [h, mi] = r.split(':').map(Number);
-    const tot = (Math.round((h*60 + mi) / 5) * 5) % 1440;
+    const tot = ((Math.round((h*60 + mi + m) / 5) * 5 % 1440) + 1440) % 1440; // prévision arrondie aux 5 min
     return String(Math.floor(tot/60)).padStart(2,'0') + ':' + String(tot%60).padStart(2,'0');
   }
   function arriveeForecast(o){
     const special = (o.quai === 'Le Trait' || o.quai === 'Qtsw');
     if(special || (o.secteur && o.secteur !== 'Rouen')) return null;
     if(o.heureBouille || o.heureLamaneur) return null;
-    if(o.heureCaudebec) return [{label:'Bouille', time: addMinutesFc(o.heureCaudebec, learnedStep('cb'))}];
-    if(o.heurePilote) return [{label:'Caudebec', time: addMinutesFc(o.heurePilote, learnedStep('pc'))}, {label:'Bouille', time: addMinutesFc(o.heurePilote, learnedStep('pb'))}];
+    if(o.heureCaudebec) return [{label:'Bouille', time: addMinutesHHMM(o.heureCaudebec, learnedStep('cb'))}];
+    if(o.heurePilote) return [{label:'Caudebec', time: addMinutesHHMM(o.heurePilote, learnedStep('pc'))}, {label:'Bouille', time: addMinutesHHMM(o.heurePilote, learnedStep('pb'))}];
     return null;
   }
   function updateArriveeForecast(){
@@ -859,8 +864,8 @@
     const special = (quai === 'Le Trait' || quai === 'Qtsw');
     const showCau = !special && $('arriveeCaudebecField').style.display !== 'none';
     const showBou = $('arriveeBouilleField').style.display !== 'none';
-    const cauF = (showCau && pil && !cau && !bou) ? addMinutesFc(pil, learnedStep('pc')) : '';
-    const bouF = (!special && showBou && !bou && (cau || pil)) ? (cau ? addMinutesFc(cau, learnedStep('cb')) : addMinutesFc(pil, learnedStep('pb'))) : '';
+    const cauF = (showCau && pil && !cau && !bou) ? addMinutesHHMM(pil, learnedStep('pc')) : '';
+    const bouF = (!special && showBou && !bou && (cau || pil)) ? (cau ? addMinutesHHMM(cau, learnedStep('cb')) : addMinutesHHMM(pil, learnedStep('pb'))) : '';
     cauIn.placeholder = cauF ? `≈ ${cauF.replace(':','h')} (prévision)` : 'hhmm';
     bouIn.placeholder = bouF ? `≈ ${bouF.replace(':','h')} (prévision)` : 'hhmm';
     cauIn.classList.toggle('forecast-ph', !!cauF);
@@ -915,14 +920,35 @@
     if(cv && cv.type === 'cover') return crewForOwnIndex(day.index);
     return day.index < 11 ? crewForOwnIndex(day.index) : null;
   }
+  // -- couleur des numéros selon leur poste du jour : bleu service, rouge dispo, vert super dispo --
+  function posteGroups(){
+    const now = new Date();
+    const w = winterDay(now);
+    if(w) return {S: w.s.slice(), D: w.d.slice(), SD: w.sd.slice()};
+    const day = planningDayAt(now, planningStartFor(PLAN_CHOICE));
+    const g = {S: [], D: [], SD: []};
+    for(let n = 1; n <= 17; n++){
+      const i = colleagueIndex(day.index, n), t = PLANNING_CYCLE[i].type;
+      if(g[t]) g[t].push({n, i});
+    }
+    ['S','D','SD'].forEach(t => { g[t] = g[t].sort((a, b) => a.i - b.i).map(x => x.n); });
+    return g;
+  }
+  function posteClassOf(n){
+    const g = posteGroups(); n = Number(n);
+    return g.S.includes(n) ? ' p-S' : g.D.includes(n) ? ' p-D' : g.SD.includes(n) ? ' p-SD' : '';
+  }
   function renderRosterSuggestions(){
     const roster = getCurrentRoster();
+    const g = posteGroups();
+    const GL = {S:'Service', D:'Dispo', SD:'Super dispo'};
     ['arriveeVedette','arriveeEquipe','departVedette','departEquipe','mouvementVedetteDepart','mouvementEquipeDepart','mouvementVedetteArrivee','mouvementEquipeArrivee','corveeNumeros'].forEach(prefix => {
       const el = document.getElementById(prefix+'Roster');
       if(!el) return;
       if(!roster){ el.innerHTML=''; return; }
-      el.innerHTML = '<span class="roster-suggest-label">Équipage :</span>' +
-        roster.map(n => `<button type="button" class="roster-chip${n === effectiveNum() ? ' me' : ''}" data-prefix="${prefix}" data-num="${n}">${n === effectiveNum() ? n + ' · toi' : n}</button>`).join('');
+      el.innerHTML = '<span class="roster-suggest-label">Équipage :</span>' + ['S','D','SD'].filter(t => g[t].length).map(t =>
+        `<div class="roster-grp"><span class="roster-suggest-label">${GL[t]}</span>` +
+        g[t].map(n => `<button type="button" class="roster-chip p-${t}${n === effectiveNum() ? ' me' : ''}" data-prefix="${prefix}" data-num="${n}">${n === effectiveNum() ? n + ' · toi' : n}</button>`).join('') + '</div>').join('');
     });
   }
   document.addEventListener('click', e => {
@@ -1171,7 +1197,7 @@
         <div>
           <div class="cover-label" style="color:${PLANNING_COLORS[it.type]}">TU COUVRES LE ${cv.num}</div>
           <div class="mini-card-value">${it.label}</div>
-          <div class="mini-card-sub">${planningTypeLabel(it.type)} · jusqu'à ${fmtHM(cv.to)}</div>
+          <div class="mini-card-sub">${planningTypeLabel(it.type)} · jusqu'à ${fmtDayHM(cv.to)}</div>
         </div>
         <div class="mini-card-footer"><button type="button" class="cover-stop" data-id="${cv.id}">Arrêter</button></div>`;
       if(wcov) renderWinterBordee(wcov); else renderBordee(day, crewForOwnIndex(day.index));
@@ -1181,7 +1207,7 @@
         <div>
           <div class="cover-label" style="color:var(--muted)">COUVERT PAR LE ${cv.num}</div>
           <div class="mini-card-value">Libre</div>
-          <div class="mini-card-sub">jusqu'à ${fmtHM(cv.to)}, puis ${day.item.label} reprend</div>
+          <div class="mini-card-sub">jusqu'à ${fmtDayHM(cv.to)}, puis ${day.item.label} reprend</div>
         </div>
         <div class="mini-card-footer"><button type="button" class="cover-stop" data-id="${cv.id}">Arrêter</button></div>`;
       renderBordee(day);
@@ -1195,40 +1221,12 @@
     $('coverOverlay').classList.add('show');
   }
   $('coverOverlay').addEventListener('change', e => {
-    if(!coverState || !e.target.classList || !e.target.classList.contains('conge-date') || !$('congeFrom')) return;
+    if(!coverState || !e.target.classList || !e.target.classList.contains('conge-date')) return;
     coverState.cFrom = $('congeFrom').value; coverState.cTo = $('congeTo').value;
     if(coverState.cTo && coverState.cFrom && coverState.cTo < coverState.cFrom && e.target.id === 'congeFrom'){ coverState.cTo = coverState.cFrom; $('congeTo').value = coverState.cFrom; }
     $('congeSum').innerHTML = congeSummary(coverState.cFrom, coverState.cTo);
     $('congeMsg').textContent = '';
   });
-  function coverAutoDates(){
-    const s = coverState, fd = $('coverFromDate'), td = $('coverToDate');
-    if(!s || s.step !== 'time' || !fd || !td) return;
-    const fromHM = $('coverFrom').value, toHM = $('coverTo').value;
-    if(!s.fromTouched){
-      let d = new Date();
-      if(fromHM){
-        const [h, m] = fromHM.split(':').map(Number);
-        if(new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).getTime() < Date.now() - 12*3600000) d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      }
-      s.fromDate = periodDateKey(d);
-    }
-    if(!s.toTouched){
-      const d = keyToDate(s.fromDate, 12);
-      if(fromHM && toHM && toHM <= fromHM) d.setDate(d.getDate() + 1);
-      s.toDate = periodDateKey(d);
-    }
-    fd.value = s.fromDate; td.value = s.toDate;
-  }
-  $('coverOverlay').addEventListener('change', e => {
-    const s = coverState;
-    if(!s || !e.target.classList || !e.target.classList.contains('cover-date')) return;
-    if(e.target.id === 'coverFromDate'){ s.fromTouched = true; s.fromDate = e.target.value || s.fromDate; }
-    else { s.toTouched = true; s.toDate = e.target.value || s.toDate; }
-    coverAutoDates();
-    $('coverMsg').textContent = '';
-  });
-  $('coverOverlay').addEventListener('timechange', () => coverAutoDates());
   function closeCoverSheet(){ $('coverOverlay').classList.remove('show'); coverState = null; }
   function renderCoverSheet(){
     const s = coverState;
@@ -1243,9 +1241,11 @@
       getConges().filter(cg => cg.to >= todayK).forEach(cg => {
         h += `<div class="cover-current conge-current"><span>Congés du ${formatPlanningDate(keyToDate(cg.from))} au ${formatPlanningDate(keyToDate(cg.to))}</span><button type="button" class="cover-stop conge-cancel" data-cid="${cg.id}">Annuler</button></div>`;
       });
-      const act = activeCoverage(), up = upcomingCoverage();
+      const act = activeCoverage();
       if(act) h += `<div class="cover-current"><span>${coverageText(act)} · jusqu'à ${fmtDayHM(act.to)}</span><button type="button" class="cover-stop" data-id="${act.id}">Arrêter</button></div>`;
-      if(up) h += `<div class="cover-current"><span>Prévu : ${coverageText(up)} · ${fmtDayHM(up.from)} → ${fmtDayHM(up.to)}</span><button type="button" class="cover-stop" data-id="${up.id}">Annuler</button></div>`;
+      getCoverages().filter(cv => cv.from > Date.now()).sort((x, y) => x.from - y.from).forEach(up => {
+        h += `<div class="cover-current"><span>Prévu : ${coverageText(up)} · ${fmtDayHM(up.from)} → ${fmtDayHM(up.to)}</span><button type="button" class="cover-stop" data-id="${up.id}">Annuler</button></div>`;
+      });
     } else if(s.step === 'conge'){
       const todayK = periodDateKey(currentPeriodStart(new Date()));
       s.cFrom = s.cFrom || todayK; s.cTo = s.cTo || s.cFrom;
@@ -1262,41 +1262,83 @@
       for(let n = 1; n <= 17; n++){ if(n === ownNum()) continue; h += `<button type="button" class="cover-num" data-n="${n}">${n}</button>`; }
       h += '</div>';
     } else if(s.step === 'time'){
-      if(!s.fromDate) s.fromDate = periodDateKey(new Date());
-      if(!s.toDate) s.toDate = s.fromDate;
+      s.fDate = s.fDate || periodDateKey(new Date()); s.tDate = s.tDate || s.fDate;
       h += `<div class="ask-title">${s.type === 'cover' ? 'Tu couvres le ' + s.num : 'Le ' + s.num + ' te couvre'}</div>
         <div class="ask-text">Date et heure de début et de fin. Pour 24h, tape 0800 et 0800.</div>
         ${s.warn ? `<div class="cover-warn">${s.warn}</div>` : ''}
-        <div class="field"><label>Début</label><div class="row-inline"><input type="date" id="coverFromDate" class="cover-date" style="flex:1.8;min-width:0;" value="${s.fromDate}"><input type="text" inputmode="numeric" class="time-text" data-target="coverFrom" placeholder="hhmm" maxlength="5" autocomplete="off" style="flex:1;min-width:0;" value="${s.fromTxt || ''}"></div><input type="hidden" id="coverFrom" value="${s.from || ''}"></div>
-        <div class="field"><label>Fin</label><div class="row-inline"><input type="date" id="coverToDate" class="cover-date" style="flex:1.8;min-width:0;" value="${s.toDate}"><input type="text" inputmode="numeric" class="time-text" data-target="coverTo" placeholder="hhmm" maxlength="5" autocomplete="off" style="flex:1;min-width:0;" value="${s.toTxt || ''}"></div><input type="hidden" id="coverTo" value="${s.to || ''}"></div>
+        <div class="cover-when">
+          <div class="cover-when-lab">Début</div>
+          <div class="cover-when-row">
+            <input type="date" id="coverFromDate" class="cover-date" value="${s.fDate}">
+            <div class="field" style="flex:1;margin:0;"><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="coverFrom" placeholder="hhmm" maxlength="5" autocomplete="off" value="${s.fromTxt || ''}"></div><input type="hidden" id="coverFrom" value="${s.from || ''}"></div>
+          </div>
+          <div class="cover-when-lab">Fin</div>
+          <div class="cover-when-row">
+            <input type="date" id="coverToDate" class="cover-date" value="${s.tDate}">
+            <div class="field" style="flex:1;margin:0;"><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="coverTo" placeholder="hhmm" maxlength="5" autocomplete="off" value="${s.toTxt || ''}"></div><input type="hidden" id="coverTo" value="${s.to || ''}"></div>
+          </div>
+        </div>
+        <div class="conge-sum" id="coverSum"></div>
         <div class="status-msg" id="coverMsg"></div>
-        <button type="button" class="btn-primary" id="coverValidate">Valider</button>
+        <button type="button" class="btn-primary" id="coverValidate">${s.warn ? 'Valider quand même' : 'Valider'}</button>
         ${s.warn ? '<button type="button" class="ask-no" id="coverOtherNum">Choisir un autre numéro</button>' : ''}`;
     }
     h += `<button type="button" class="ask-no" id="coverClose">${s.step === 'menu' ? 'Fermer' : 'Annuler'}</button>`;
     $('coverBox').innerHTML = h;
+    if(s.step === 'time') updateCoverSum();
   }
-  function coverWindow(fromHM, toHM, fromKey, toKey){
+  function coverWindow(fDate, fromHM, tDate, toHM, auto){
+    const [fy, fmo, fd] = fDate.split('-').map(Number), [ty, tmo, td] = tDate.split('-').map(Number);
     const [fh, fm] = fromHM.split(':').map(Number), [th, tm] = toHM.split(':').map(Number);
-    const from = keyToDate(fromKey, fh); from.setMinutes(fm);
-    const to = keyToDate(toKey, th); to.setMinutes(tm);
+    const from = new Date(fy, fmo - 1, fd, fh, fm, 0, 0);
+    let to = new Date(ty, tmo - 1, td, th, tm, 0, 0);
+    if(auto && to.getTime() <= from.getTime()) to = new Date(ty, tmo - 1, td + 1, th, tm, 0, 0);
+    if(to.getTime() <= from.getTime()) return {err: 'La fin est avant le début.'};
+    if(to.getTime() <= Date.now()) return {err: 'Cette période est déjà passée.'};
     return {from: from.getTime(), to: to.getTime()};
+  }
+  function colleaguePosteAt(num, ps){
+    const probe = new Date(ps.getFullYear(), ps.getMonth(), ps.getDate(), 9, 0, 0, 0);
+    const w = winterDay(probe);
+    if(w){ const t = winterPosteOf(w, num); return {type: t, full: WINTER_LABEL[t]}; }
+    const day = planningDayAt(probe, planningStartFor(PLAN_CHOICE));
+    const i = colleagueIndex(day.index, num);
+    return {type: PLANNING_CYCLE[i].type, full: posteFullName(i)};
+  }
+  function coverServiceDays(w){
+    const days = [];
+    let ps = currentPeriodStart(new Date(w.from));
+    while(ps.getTime() < w.to && days.length < 30){ days.push(ps); ps = new Date(ps.getFullYear(), ps.getMonth(), ps.getDate() + 1, 8, 0, 0, 0); }
+    return days;
+  }
+  function updateCoverSum(){
+    const el = $('coverSum'); const s = coverState;
+    if(!el || !s || s.step !== 'time') return;
+    const fromHM = $('coverFrom').value, toHM = $('coverTo').value;
+    if(!fromHM || !toHM){ el.innerHTML = ''; return; }
+    const w = coverWindow(s.fDate, fromHM, s.tDate, toHM, !s.tManual);
+    if(w.err){ el.innerHTML = `<span style="color:var(--danger);">${w.err}</span>`; return; }
+    const days = coverServiceDays(w);
+    const shown = days.slice(0, 7);
+    let lines;
+    if(s.type === 'cover'){
+      lines = shown.map(d => { const r = colleaguePosteAt(s.num, d); return `${formatPlanningDate(d)} : le ${s.num} est en <b>${r.full}</b>${r.type === 'R' ? ' ⚠️' : ''}`; });
+    } else {
+      lines = shown.map(d => { const r = posteAt(d); return `${formatPlanningDate(d)} : tu es en <b>${r.full}</b>${r.type === 'R' ? ' (déjà en repos)' : ''}`; });
+    }
+    el.innerHTML = `Du <b>${fmtDayHM(w.from)}</b> au <b>${fmtDayHM(w.to)}</b><br>${lines.join('<br>')}${days.length > shown.length ? `<br>… et ${days.length - shown.length} jour${days.length - shown.length > 1 ? 's' : ''} de plus` : ''}`;
   }
   function validateCover(){
     const s = coverState;
     const fromHM = $('coverFrom').value, toHM = $('coverTo').value;
+    s.fDate = $('coverFromDate').value || s.fDate; s.tDate = $('coverToDate').value || s.tDate;
     if(!fromHM || !toHM){ $('coverMsg').textContent = "Renseigne l'heure de début et de fin."; return; }
-    const fKey = $('coverFromDate').value || s.fromDate, tKey = $('coverToDate').value || s.toDate;
-    s.fromDate = fKey; s.toDate = tKey;
-    const w = coverWindow(fromHM, toHM, fKey, tKey);
-    if(w.to <= w.from){ $('coverMsg').textContent = 'La fin doit être après le début.'; return; }
-    if(w.to <= Date.now()){ $('coverMsg').textContent = 'Cette période est déjà passée.'; return; }
+    const w = coverWindow(s.fDate, fromHM, s.tDate, toHM, !s.tManual);
+    if(w.err){ $('coverMsg').textContent = w.err; return; }
     if(s.type === 'cover'){
-      const anchor = planningStartFor(PLAN_CHOICE);
-      const startDay = planningDayAt(new Date(w.from), anchor);
-      const wst = winterDay(new Date(w.from));
-      const it = wst ? {type: winterPosteOf(wst, s.num)} : PLANNING_CYCLE[colleagueIndex(startDay.index, s.num)];
-      if(it.type === 'R'){
+      const first = colleaguePosteAt(s.num, currentPeriodStart(new Date(w.from)));
+      if(first.type === 'R' && s.warnKey !== s.num + '|' + s.fDate){
+        s.warnKey = s.num + '|' + s.fDate;
         s.warn = `Le ${s.num} est en repos le ${formatPlanningDate(new Date(w.from))}. Vérifie le numéro.`;
         s.from = fromHM; s.to = toHM; s.fromTxt = fromHM.replace(':','h'); s.toTxt = toHM.replace(':','h');
         renderCoverSheet();
@@ -1308,10 +1350,25 @@
     saveCoverages(list);
     closeCoverSheet();
     updatePlanning(); renderBoard();
-    const toast = $('toastMsg');
-    toast.textContent = `${coverageText(list[list.length-1])} · ${fmtDayHM(w.from)} → ${fmtDayHM(w.to)} ✓`;
-    setTimeout(() => toast.textContent = '', 2500);
+    toastMsg(`${coverageText(list[list.length-1])} · ${fmtDayHM(w.from)} → ${fmtDayHM(w.to)} ✓`, 2600);
   }
+  $('coverOverlay').addEventListener('change', e => {
+    const s = coverState;
+    if(!s || s.step !== 'time' || !e.target.classList || !e.target.classList.contains('cover-date')) return;
+    if(e.target.id === 'coverFromDate'){
+      s.fDate = e.target.value || s.fDate;
+      if(!s.tManual){ s.tDate = s.fDate; $('coverToDate').value = s.tDate; }
+      else if(s.tDate < s.fDate){ s.tDate = s.fDate; $('coverToDate').value = s.tDate; }
+    } else {
+      s.tDate = e.target.value || s.tDate; s.tManual = true;
+      if(s.tDate < s.fDate){ s.tDate = s.fDate; $('coverToDate').value = s.tDate; }
+    }
+    $('coverMsg').textContent = '';
+    updateCoverSum();
+  });
+  document.addEventListener('focusout', e => {
+    if(e.target.classList && e.target.classList.contains('time-text') && /^cover(From|To)$/.test(e.target.dataset.target || '')) setTimeout(updateCoverSum, 0);
+  });
   $('coverOverlay').addEventListener('click', e => {
     if(e.target.id === 'coverOverlay'){ closeCoverSheet(); return; }
     const s = coverState;
@@ -1529,7 +1586,8 @@
       const has = !!phones[n];
       const icon = (has || isSelf) ? '' : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--muted-2)" stroke-width="2.5" style="margin-left:4px;vertical-align:-1px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
       const growClass = (i === arr.length - 1) ? ' chip-grow-in' : '';
-      return `<span class="chip${growClass}"${(has && !isSelf) ? ' style="background:var(--notify-bg);border-color:var(--notify-border);"' : ''}><span class="chip-num" data-num="${n}">${n}${icon}</span><button type="button" class="chip-x" data-prefix="${prefix}" data-idx="${i}">×</button></span>`;
+      const pc = posteClassOf(n);
+      return `<span class="chip${growClass}${pc}"${(has && !isSelf && !pc) ? ' style="background:var(--notify-bg);border-color:var(--notify-border);"' : ''}><span class="chip-num" data-num="${n}">${n}${icon}</span><button type="button" class="chip-x" data-prefix="${prefix}" data-idx="${i}">×</button></span>`;
     }).join('');
   }
   document.addEventListener('click', e => {
@@ -1841,59 +1899,68 @@
     if(v < 480) v += 1440;
     return v;
   }
-  // heure qui compte pour une opération (passage La Bouille pour une arrivée à Rouen, lamaneur sur place pour Le Trait / Qtsw)
-  function lpAnchor(o){
+  // -- repères : à quel moment a-t-il dû partir de chez lui pour chaque opération ? --
+  function lamopeOpInfo(o){
     if(o.categorieKey === 'arrivee'){
-      if(o.quai === 'Le Trait' || o.quai === 'Qtsw') return o.heureLamaneur || o.heureBouille || o.heureCaudebec || o.heurePilote || '';
-      return o.heureBouille || o.heureCaudebec || o.heureLamaneur || o.heurePilote || '';
+      if(o.heureLamaneur) return {t:o.heureLamaneur, kind:'trait', tag:'Lamaneur '};
+      if(o.heureBouille) return {t:o.heureBouille, kind:'arr', tag:'Bouille '};
+      const fc = arriveeForecast(o);
+      const fb = fc && fc.find(f => f.label === 'Bouille');
+      if(fb && fb.time) return {t:fb.time, kind:'arr', tag:'Bouille ≈ '};
+      const t0 = getSortTime(o);
+      return t0 ? {t:t0, kind:'arr', tag:''} : null;
     }
-    return getSortTime(o);
-  }
-  // fenêtre en minutes autour du départ : l'opération compte si son heure tombe entre départ+lo et départ+hi
-  function lpWindow(o){
-    const p = PRM();
-    if(o.categorieKey === 'arrivee'){
-      if(o.quai === 'Le Trait' || o.quai === 'Qtsw') return [0, p.lpAp];
-      if(o.secteur && o.secteur !== 'Rouen') return [0, p.lpOther];
-      return [-p.lpArr, p.lpArrB];
-    }
-    if(o.categorieKey === 'depart' && o.apEnabled) return [0, p.lpAp];
-    return [0, p.lpOther];
-  }
-  function lpOpTime(o){
-    const st = serviceStartForOp(o), t = lpAnchor(o);
-    return st && t ? operationDateTime(t, st) : null;
-  }
-  function lpTripSpan(dep, ret, st){
-    const a = operationDateTime(dep, st);
-    if(!a) return null;
-    let b = null;
-    if(ret){ b = operationDateTime(ret, st); if(b && b < a) b = new Date(b.getTime() + 86400000); }
-    return {a, b};
-  }
-  function lpMatch(o, span){
-    const t = lpOpTime(o);
+    const t = getSortTime(o);
     if(!t) return null;
-    const [lo, hi] = lpWindow(o);
-    const inWin = t.getTime() >= span.a.getTime() + lo*60000 && t.getTime() <= span.a.getTime() + hi*60000;
-    const inTrip = !!span.b && t >= span.a && t <= span.b;
-    return (inWin || inTrip) ? t : null;
+    if(o.heureLamaneur && !o.heureOperation) return {t, kind:'trait', tag:'Lamaneur '};
+    if(o.categorieKey === 'depart') return {t, kind: o.apEnabled ? 'ap' : 'dep', tag:''};
+    return {t, kind:'dep', tag:''};
+  }
+  function lamopeWindow(kind){
+    const p = PRM();
+    if(kind === 'arr') return [-p.lamArrAvant, p.lamArrApres];
+    if(kind === 'ap') return [-p.lamAP, p.lamMarge];
+    if(kind === 'trait') return [-p.lamTrait, p.lamMarge];
+    return [-p.lamDep, p.lamMarge];
+  }
+  function lamopeTrips(formTrip){
+    const out = [];
+    operations.filter(o => o.categorieKey === 'lamope' && o.heureDepart).forEach(o => {
+      if(formTrip && formTrip.id === o.id) return;
+      const st = serviceStartForOp(o); if(!st) return;
+      const a = operationDateTime(o.heureDepart, st); if(!a) return;
+      let b = null;
+      if(o.heureRetour){ b = operationDateTime(o.heureRetour, st); if(b && b < a) b = new Date(b.getTime() + 86400000); }
+      out.push({id:o.id, a, b});
+    });
+    if(formTrip) out.push(formTrip);
+    return out.sort((x, y) => x.a - y.a);
+  }
+  function lamopeAssign(info, t, trips){
+    const inside = trips.find(tr => tr.b && t >= tr.a && t <= tr.b);
+    if(inside) return inside.id;
+    const w = lamopeWindow(info.kind);
+    const m = trips.find(tr => { const d = (tr.a - t) / 60000; return d >= w[0] && d <= w[1]; });
+    return m ? m.id : null;
   }
   function lamopeSuggestion(dep, ret, trip){
     const start = trip ? serviceStartForOp(trip) : getServiceStart();
     if(!start) return null;
-    const span = lpTripSpan(dep, ret, start);
-    if(!span) return null;
-    // trajets précédents : leurs opérations ne sont pas reproposées
-    const earlier = operations
-      .filter(x => x.categorieKey === 'lamope' && x.heureDepart && (!trip || x.id !== trip.id))
-      .map(x => { const st = serviceStartForOp(x); return st ? lpTripSpan(x.heureDepart, x.heureRetour, st) : null; })
-      .filter(sp => sp && sp.a < span.a);
-    const hits = operations
-      .filter(o => o.categorieKey !== 'lamope' && !o.deferred)
-      .map(o => ({o, t: lpMatch(o, span)}))
-      .filter(x => x.t && !earlier.some(sp => lpMatch(x.o, sp)))
-      .sort((x, y) => x.t - y.t);
+    const a = operationDateTime(dep, start);
+    if(!a) return null;
+    let b = null;
+    if(ret){ b = operationDateTime(ret, start); if(!b) return null; if(b < a) b = new Date(b.getTime() + 86400000); }
+    const id = trip ? trip.id : '__form';
+    const trips = lamopeTrips({id, a, b});
+    const hits = [];
+    operations.forEach(o => {
+      if(o.categorieKey === 'lamope' || o.deferred) return;
+      const st = serviceStartForOp(o); if(!st) return;
+      const info = lamopeOpInfo(o); if(!info) return;
+      const t = operationDateTime(info.t, st); if(!t) return;
+      if(lamopeAssign(info, t, trips) === id) hits.push({o, t, info});
+    });
+    hits.sort((x, y) => x.t - y.t);
     const names = [];
     hits.forEach(x => {
       const o = x.o;
@@ -1901,14 +1968,6 @@
       list.filter(Boolean).forEach(nm => { if(names[names.length-1] !== nm) names.push(nm); });
     });
     return names.length ? {names, hits} : null;
-  }
-  function lpChip(o){
-    const t = lpAnchor(o);
-    if(o.categorieKey === 'arrivee'){
-      const lab = t === o.heureBouille ? 'Bouille' : t === o.heureCaudebec ? 'Caudebec' : t === o.heureLamaneur ? 'Lamaneur' : 'Pilote';
-      return `${lab} ${t}`;
-    }
-    return t;
   }
   function updateLamopeSuggest(){
     const el = $('lamopeSuggest');
@@ -1922,8 +1981,8 @@
     if($('lamopeLieux').value.trim() === joined){ el.innerHTML = ''; return; }
     const lbl = o => o.categorieKey === 'mouvement' ? `${o.quaiDepart} → ${o.quaiArrivee}` : (o.categorieKey === 'corvee' ? o.typeCorvee : o.quai);
     el.innerHTML = `<div class="lamope-suggest">
-      <div class="lamope-suggest-title">${ret ? `Pour ce trajet (${dep} → ${ret})` : `Pour un départ à ${dep}`}, tu as noté :</div>
-      <div>${sug.hits.map(x => `<span class="lamope-suggest-chip"><b>${esc(lbl(x.o))}</b> · ${lpChip(x.o)}</span>`).join('')}</div>
+      <div class="lamope-suggest-title">Pour ce trajet${ret ? ` (${dep} → ${ret})` : ` (parti à ${dep})`}, tu as noté :</div>
+      <div>${sug.hits.map(x => `<span class="lamope-suggest-chip"><b>${esc(lbl(x.o))}</b> · ${x.info.tag}${x.info.t}</span>`).join('')}</div>
       <button type="button" class="lamope-suggest-use" id="lamopeUseSuggest">Utiliser : ${esc(joined)}</button>
     </div>`;
     $('lamopeUseSuggest').onclick = () => { $('lamopeLieux').value = joined; updateLamopeSuggest(); };
@@ -2244,24 +2303,28 @@
     if(o.categorieKey === 'corvee') return `<b>${o.typeCorvee}</b>${o.heureLamaneur ? ' — Lamaneur sur place '+o.heureLamaneur : (o.heureOperation ? ' — '+o.heureOperation : '')}`;
     return '';
   }
+  function numsHtml(arr, o){
+    const live = !!(o && activeService && o.serviceId === activeService.id && !o.carried);
+    return arr.map(n => { const c = live ? posteClassOf(n) : ''; return c ? `<span class="pn${c}">${n}</span>` : String(n); }).join(', ');
+  }
   function formatOpDetailParts(o){
     const mainBits = [];
     let apText = '';
     if(o.categorieKey === 'corvee'){
-      if(o.numeros && o.numeros.length) mainBits.push('Numéros '+o.numeros.join(', '));
+      if(o.numeros && o.numeros.length) mainBits.push('Numéros '+numsHtml(o.numeros, o));
     } else if(o.categorieKey === 'mouvement'){
       const dep = [];
-      if(o.equipeTerreDepart && o.equipeTerreDepart.length) dep.push('Équipe '+o.equipeTerreDepart.join(', '));
-      if(o.vedetteDepart && o.vedetteDepart.length) dep.push('Vedette '+o.vedetteDepart.join(', '));
+      if(o.equipeTerreDepart && o.equipeTerreDepart.length) dep.push('Équipe '+numsHtml(o.equipeTerreDepart, o));
+      if(o.vedetteDepart && o.vedetteDepart.length) dep.push('Vedette '+numsHtml(o.vedetteDepart, o));
       if(dep.length) mainBits.push('Départ : '+dep.join(' · '));
       const arr = [];
-      if(o.equipeTerreArrivee && o.equipeTerreArrivee.length) arr.push('Équipe '+o.equipeTerreArrivee.join(', '));
-      if(o.vedetteArrivee && o.vedetteArrivee.length) arr.push('Vedette '+o.vedetteArrivee.join(', '));
+      if(o.equipeTerreArrivee && o.equipeTerreArrivee.length) arr.push('Équipe '+numsHtml(o.equipeTerreArrivee, o));
+      if(o.vedetteArrivee && o.vedetteArrivee.length) arr.push('Vedette '+numsHtml(o.vedetteArrivee, o));
       if(arr.length) mainBits.push('Arrivée : '+arr.join(' · '));
       if(o.apEnabled) apText = `AP <span class="ap-neg">-${o.apRetirer}</span> / <span class="ap-pos">+${o.apRemettre}</span>`;
     } else {
-      if(o.equipeTerre && o.equipeTerre.length) mainBits.push('Équipe '+o.equipeTerre.join(', '));
-      if(o.vedette && o.vedette.length) mainBits.push('Vedette '+o.vedette.join(', '));
+      if(o.equipeTerre && o.equipeTerre.length) mainBits.push('Équipe '+numsHtml(o.equipeTerre, o));
+      if(o.vedette && o.vedette.length) mainBits.push('Vedette '+numsHtml(o.vedette, o));
       if(o.apEnabled){
         if(o.categorieKey === 'arrivee') apText = `<span class="ap-pos">AP +${o.apValue}</span>`;
         else if(o.categorieKey === 'depart') apText = `<span class="ap-neg">AP -${o.apValue}</span>`;
@@ -4328,16 +4391,23 @@
 
   // -- démarrage : choix du planning (isolation totale des données par num\u00e9ro) --
   // ======== version, accueil d'un nouveau collègue, aide ========
-  const APP_VERSION = '3.9';
-  const APP_DATE = '22/10/2026';
+  const APP_VERSION = '3.11';
+  const APP_DATE = '17/11/2026';
   // Quoi de neuf : une entrée par version, la plus récente en premier
   const WHATS_NEW = [
-    {v:'3.9', d:'22/10/2026', items:[
-        'Heure Lamope propose maintenant aussi les arrivées passées à La Bouille juste avant ton départ (ex. Bouille 00h40, départ 1h15)',
-        'Une opération déjà prise par un trajet précédent n\'est plus reproposée, et un trajet sans retour ne propose plus que les opérations proches de son départ',
-        'Les marges de ces repères se règlent dans Paramètres avancés',
-        'Remplacements : tu choisis la date de début et de fin, avec l\'heure à côté, pour "Je couvre un collègue" comme pour "Un collègue me couvre"',
-        'Les prévisions Caudebec et La Bouille sont arrondies aux 5 minutes (10h03 devient 10h05)'
+    {v:'3.11', d:'17/11/2026', items:[
+        'Couleur des numéros selon leur poste du jour : bleu service, rouge dispo, vert super dispo. Ça se voit quand tu ajoutes une opération et dans le service en cours',
+        '\"Équipage\" propose maintenant les numéros en service, en dispo et en super dispo, rangés par poste'
+    ]},
+    {v:'3.10', d:'17/11/2026', items:[
+        'Les prévisions grises de Caudebec et de La Bouille sont arrondies aux 5 minutes (10h03 devient 10h05)',
+        'Remplacements : si le collègue est en repos, l\'avertissement ne te bloque plus, un deuxième appui sur "Valider quand même" enregistre le remplacement'
+    ]},
+    {v:'3.9', d:'07/10/2026', items:[
+        'Heure Lamope : l\'appli retrouve les bonnes opérations pour ton trajet, même si le navire est passé à La Bouille avant ton heure de départ (arrivée Rouen jusqu\'à 2h avant, départ avec AP, Le Trait et Qtsw jusqu\'à 1h30, autres jusqu\'à 1h)',
+        'Dans les lieux proposés, l\'heure qui compte est affichée, par exemple "Moulinaux · Bouille 00:40"',
+        'Remplacements : tu choisis maintenant la date de début et de fin, sur plusieurs jours si besoin, avec le poste du collègue pour chaque jour',
+        'Les repères des trajets sont réglables dans l\'administration, paramètres de l\'appli'
     ]},
     {v:'3.8', d:'05/10/2026', items:[
         'Congés : touche la carte planning, "Je pose des congés", choisis tes dates. Pendant tes congés, la carte affiche "Congé" en corail et ta date de reprise, sans rappels ni alertes',
@@ -4665,7 +4735,7 @@
 
   // ======== 3.4 : réglages, paramètres avancés, centre de notifications, administration ========
   const SETTINGS_DEFAULT = {remind:true, remindMin:30, busy:true, sound:'double', night:'auto', anim:true};
-  const PARAMS_DEFAULT = {step:150, gap:120, busy:4, chain:60, tom:120, undo:5, keep:3, nightStart:21, nightEnd:8, draftH:12, lpArr:120, lpArrB:30, lpAp:90, lpOther:60};
+  const PARAMS_DEFAULT = {step:150, gap:120, busy:4, chain:60, tom:120, undo:5, keep:3, nightStart:21, nightEnd:8, draftH:12, lamArrAvant:30, lamArrApres:120, lamAP:90, lamTrait:90, lamDep:60, lamMarge:30};
   function SET(){ return Object.assign({}, SETTINGS_DEFAULT, (PLAN_CHOICE && lsGet('bateauSettings_' + PLAN_CHOICE)) || {}); }
   function saveSET(s){ lsSet('bateauSettings_' + PLAN_CHOICE, s); }
   function PRM(){ return Object.assign({}, PARAMS_DEFAULT, (PLAN_CHOICE && lsGet('bateauParams_' + PLAN_CHOICE)) || {}); }
@@ -4890,10 +4960,12 @@
     ['nightStart', 'Début du mode nuit auto', 1, 17, 23, v => v + 'h'],
     ['nightEnd', 'Fin du mode nuit auto', 1, 4, 10, v => v + 'h'],
     ['draftH', 'Durée de vie d\'un brouillon', 1, 1, 48, v => v + ' h'],
-    ['lpArr', 'Lamope : arrivée Rouen, départ jusqu\'à … après La Bouille', 15, 30, 240, v => fmtDur(v)],
-    ['lpArrB', 'Lamope : arrivée Rouen, départ jusqu\'à … avant La Bouille', 15, 0, 90, v => v + ' min'],
-    ['lpAp', 'Lamope : départ avec AP, Le Trait, Qtsw, avance de', 15, 30, 180, v => fmtDur(v)],
-    ['lpOther', 'Lamope : autres opérations, avance de', 15, 15, 180, v => fmtDur(v)]
+    ['lamArrApres', 'Trajet · arrivée Rouen : départ jusqu\'à … après La Bouille', 15, 0, 360, v => fmtDur(v)],
+    ['lamArrAvant', 'Trajet · arrivée Rouen : départ jusqu\'à … avant La Bouille', 15, 0, 180, v => fmtDur(v)],
+    ['lamAP', 'Trajet · départ avec AP : départ de chez moi … avant', 15, 30, 240, v => fmtDur(v)],
+    ['lamTrait', 'Trajet · Le Trait et Qtsw : départ … avant', 15, 30, 240, v => fmtDur(v)],
+    ['lamDep', 'Trajet · départ sans AP, mouvement, corvée : départ … avant', 15, 15, 240, v => fmtDur(v)],
+    ['lamMarge', 'Trajet · marge si je pars après l\'heure annoncée', 15, 0, 120, v => fmtDur(v)]
   ];
   function pageParams(){
     const p = PRM();
