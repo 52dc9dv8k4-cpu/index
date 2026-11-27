@@ -544,6 +544,7 @@
       <div class="field" id="arriveeCaudebecField"><label>Heure passage Caudebec</label><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="arriveeHeureCaudebec" placeholder="hhmm" maxlength="5" autocomplete="off"></div><input type="hidden" id="arriveeHeureCaudebec"></div>
       <div class="field" id="arriveeBouilleField"><label>Heure passage La Bouille</label><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="arriveeHeureBouille" placeholder="hhmm" maxlength="5" autocomplete="off"></div><input type="hidden" id="arriveeHeureBouille"></div>
       <div class="field" id="arriveeLamaneurField" style="display:none;"><label>Heure lamaneur sur place</label><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="arriveeHeureLamaneur" placeholder="hhmm" maxlength="5" autocomplete="off"></div><input type="hidden" id="arriveeHeureLamaneur"></div>
+      <div class="field"><label>Évitage</label><select id="arriveeEvitage"><option value="">Aucun</option><option value="Hautot">Hautot</option><option value="Jupiter">Jupiter</option><option value="BRQ">BRQ</option></select></div>
       <div class="field">
         <label>Équipe à terre</label>
         <div class="chip-list" id="arriveeEquipeChips"></div>
@@ -607,6 +608,7 @@
         <div class="quai-suggestions" id="mouvementQuaiArriveeSuggestions"></div>
       </div>
       <div class="field"><label>Heure d'opération</label><div class="row-inline"><input type="text" inputmode="numeric" class="time-text" data-target="mouvementHeure" placeholder="hhmm" maxlength="5" autocomplete="off"></div><input type="hidden" id="mouvementHeure"></div>
+      <div class="field"><label>Évitage</label><select id="mouvementEvitage"><option value="">Aucun</option><option value="Hautot">Hautot</option><option value="Jupiter">Jupiter</option><option value="BRQ">BRQ</option></select></div>
       <div class="mouvement-team-group">
         <div class="mouvement-team-label" style="color:#3E5C82;">Équipe au départ</div>
         <div class="field">
@@ -1672,7 +1674,7 @@
       setTimeSelectValue('arriveeHeurePilote',''); setTimeSelectValue('arriveeHeureCaudebec',''); setTimeSelectValue('arriveeHeureBouille',''); setTimeSelectValue('arriveeHeureLamaneur','');
       resetChip('arriveeVedette'); resetChip('arriveeEquipe');
       $('arriveeApCheck').checked=false; $('arriveeApField').style.display='none'; $('arriveeApValue').selectedIndex=0;
-      $('arriveeRemarque').value='';
+      $('arriveeRemarque').value=''; $('arriveeEvitage').selectedIndex=0;
     } else if(key === 'depart'){
       $('departQuai').value = '';
       setTimeSelectValue('departHeure','');
@@ -1686,7 +1688,7 @@
       resetChip('mouvementVedetteArrivee'); resetChip('mouvementEquipeArrivee');
       $('mouvementApCheck').checked=false; $('mouvementApField').style.display='none';
       $('mouvementApRetirer').selectedIndex=0; $('mouvementApRemettre').selectedIndex=0;
-      $('mouvementRemarque').value='';
+      $('mouvementRemarque').value=''; $('mouvementEvitage').selectedIndex=0;
     } else if(key === 'corvee'){
       $('corveeType').selectedIndex = 0;
       setTimeSelectValue('corveeHeure',''); setTimeSelectValue('corveeHeureLamaneur','');
@@ -2120,6 +2122,7 @@
       entry.apEnabled = $('arriveeApCheck').checked;
       entry.apValue = entry.apEnabled ? $('arriveeApValue').value : null;
       entry.remarque = $('arriveeRemarque').value.trim();
+      entry.evitage = $('arriveeEvitage').value;
     } else if(activeCategoryKey === 'depart'){
       const quai = quaiValueOf($('departQuai'), secteur);
       if(!quai){ status.textContent = 'Choisis un quai.'; return; }
@@ -2144,6 +2147,7 @@
       entry.apRetirer = entry.apEnabled ? $('mouvementApRetirer').value : null;
       entry.apRemettre = entry.apEnabled ? $('mouvementApRemettre').value : null;
       entry.remarque = $('mouvementRemarque').value.trim();
+      entry.evitage = $('mouvementEvitage').value;
     } else if(activeCategoryKey === 'corvee'){
       const type = $('corveeType').value;
       if(!type){ status.textContent = 'Choisis un type de corvée.'; return; }
@@ -2255,7 +2259,7 @@
       $('arriveeApCheck').checked = !!o.apEnabled;
       $('arriveeApField').style.display = o.apEnabled ? '' : 'none';
       if(o.apEnabled) $('arriveeApValue').value = o.apValue;
-      $('arriveeRemarque').value = o.remarque || '';
+      $('arriveeRemarque').value = o.remarque || ''; $('arriveeEvitage').value = o.evitage || '';
     } else if(o.categorieKey === 'depart'){
       setQuaiValueIfPresent($('departQuai'), o.quai, secteur);
       setTimeSelectValue('departHeure', o.heureOperation || '');
@@ -2276,7 +2280,7 @@
       $('mouvementApCheck').checked = !!o.apEnabled;
       $('mouvementApField').style.display = o.apEnabled ? '' : 'none';
       if(o.apEnabled){ $('mouvementApRetirer').value = o.apRetirer; $('mouvementApRemettre').value = o.apRemettre; }
-      $('mouvementRemarque').value = o.remarque || '';
+      $('mouvementRemarque').value = o.remarque || ''; $('mouvementEvitage').value = o.evitage || '';
     } else if(o.categorieKey === 'corvee'){
       $('corveeType').value = o.typeCorvee || '';
       setTimeSelectValue('corveeHeure', o.heureOperation || '');
@@ -2325,10 +2329,12 @@
       if(o.equipeTerreArrivee && o.equipeTerreArrivee.length) arr.push('Équipe '+numsHtml(o.equipeTerreArrivee, o));
       if(o.vedetteArrivee && o.vedetteArrivee.length) arr.push('Vedette '+numsHtml(o.vedetteArrivee, o));
       if(arr.length) mainBits.push('Arrivée : '+arr.join(' · '));
+      if(o.evitage) mainBits.push('Évitage '+esc(o.evitage));
       if(o.apEnabled) apText = `AP <span class="ap-neg">-${o.apRetirer}</span> / <span class="ap-pos">+${o.apRemettre}</span>`;
     } else {
       if(o.equipeTerre && o.equipeTerre.length) mainBits.push('Équipe '+numsHtml(o.equipeTerre, o));
       if(o.vedette && o.vedette.length) mainBits.push('Vedette '+numsHtml(o.vedette, o));
+      if(o.evitage) mainBits.push('Évitage '+esc(o.evitage));
       if(o.apEnabled){
         if(o.categorieKey === 'arrivee') apText = `<span class="ap-pos">AP +${o.apValue}</span>`;
         else if(o.categorieKey === 'depart') apText = `<span class="ap-neg">AP -${o.apValue}</span>`;
@@ -4395,10 +4401,13 @@
 
   // -- démarrage : choix du planning (isolation totale des données par num\u00e9ro) --
   // ======== version, accueil d'un nouveau collègue, aide ========
-  const APP_VERSION = '3.12';
-  const APP_DATE = '26/11/2026';
+  const APP_VERSION = '3.13';
+  const APP_DATE = '27/11/2026';
   // Quoi de neuf : une entrée par version, la plus récente en premier
   const WHATS_NEW = [
+    {v:'3.13', d:'27/11/2026', items:[
+        'Évitage : un menu (Hautot, Jupiter, BRQ) dans les arrivées et les mouvements. Il est facultatif, tu peux valider l\'opération sans le remplir. Il s\'affiche sur la carte de l\'opération'
+    ]},
     {v:'3.12', d:'26/11/2026', items:[
         'Mes statistiques (dans Réglages) : nombre d\'opérations du mois et des 4 mois précédents, comptées dès que tu les valides avec le +. Arrivées, départs, mouvements et corvées seulement, pas les trajets Lamope',
         'Pour un mois d\'avant cette version, touche sa ligne et saisis son nombre d\'opérations',
