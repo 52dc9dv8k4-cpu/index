@@ -564,6 +564,8 @@
           <select id="arriveeApValue"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
         </div>
       </div>
+      <label class="checkbox-row"><input type="checkbox" id="arriveeAr"> AR (amarrage renforcé)</label>
+      <label class="checkbox-row"><input type="checkbox" id="arriveeAl"> AL (amarrage long)</label>
       <div class="field"><label>Remarque</label><input type="text" id="arriveeRemarque" placeholder="Optionnel"></div>
     </div>
 
@@ -593,6 +595,8 @@
           <select id="departApValue"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
         </div>
       </div>
+      <label class="checkbox-row"><input type="checkbox" id="departAr"> AR (amarrage renforcé)</label>
+      <label class="checkbox-row"><input type="checkbox" id="departAl"> AL (amarrage long)</label>
       <div class="field"><label>Remarque</label><input type="text" id="departRemarque" placeholder="Optionnel"></div>
     </div>
 
@@ -648,6 +652,8 @@
           <select id="mouvementApRemettre"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
         </div>
       </div>
+      <label class="checkbox-row"><input type="checkbox" id="mouvementAr"> AR (amarrage renforcé)</label>
+      <label class="checkbox-row"><input type="checkbox" id="mouvementAl"> AL (amarrage long)</label>
       <div class="field"><label>Remarque</label><input type="text" id="mouvementRemarque" placeholder="Optionnel"></div>
     </div>
 
@@ -1674,13 +1680,13 @@
       setTimeSelectValue('arriveeHeurePilote',''); setTimeSelectValue('arriveeHeureCaudebec',''); setTimeSelectValue('arriveeHeureBouille',''); setTimeSelectValue('arriveeHeureLamaneur','');
       resetChip('arriveeVedette'); resetChip('arriveeEquipe');
       $('arriveeApCheck').checked=false; $('arriveeApField').style.display='none'; $('arriveeApValue').selectedIndex=0;
-      $('arriveeRemarque').value=''; $('arriveeEvitage').selectedIndex=0;
+      $('arriveeRemarque').value=''; $('arriveeAr').checked=false; $('arriveeAl').checked=false; $('arriveeEvitage').selectedIndex=0;
     } else if(key === 'depart'){
       $('departQuai').value = '';
       setTimeSelectValue('departHeure','');
       resetChip('departVedette'); resetChip('departEquipe');
       $('departApCheck').checked=false; $('departApField').style.display='none'; $('departApValue').selectedIndex=0;
-      $('departRemarque').value='';
+      $('departRemarque').value=''; $('departAr').checked=false; $('departAl').checked=false;
     } else if(key === 'mouvement'){
       $('mouvementQuaiDepart').value = ''; $('mouvementQuaiArrivee').value = '';
       setTimeSelectValue('mouvementHeure','');
@@ -1688,7 +1694,7 @@
       resetChip('mouvementVedetteArrivee'); resetChip('mouvementEquipeArrivee');
       $('mouvementApCheck').checked=false; $('mouvementApField').style.display='none';
       $('mouvementApRetirer').selectedIndex=0; $('mouvementApRemettre').selectedIndex=0;
-      $('mouvementRemarque').value=''; $('mouvementEvitage').selectedIndex=0;
+      $('mouvementRemarque').value=''; $('mouvementAr').checked=false; $('mouvementAl').checked=false; $('mouvementEvitage').selectedIndex=0;
     } else if(key === 'corvee'){
       $('corveeType').selectedIndex = 0;
       setTimeSelectValue('corveeHeure',''); setTimeSelectValue('corveeHeureLamaneur','');
@@ -2122,6 +2128,7 @@
       entry.apEnabled = $('arriveeApCheck').checked;
       entry.apValue = entry.apEnabled ? $('arriveeApValue').value : null;
       entry.remarque = $('arriveeRemarque').value.trim();
+      entry.ar = $('arriveeAr').checked; entry.al = $('arriveeAl').checked;
       entry.evitage = $('arriveeEvitage').value;
     } else if(activeCategoryKey === 'depart'){
       const quai = quaiValueOf($('departQuai'), secteur);
@@ -2133,6 +2140,7 @@
       entry.apEnabled = $('departApCheck').checked;
       entry.apValue = entry.apEnabled ? $('departApValue').value : null;
       entry.remarque = $('departRemarque').value.trim();
+      entry.ar = $('departAr').checked; entry.al = $('departAl').checked;
     } else if(activeCategoryKey === 'mouvement'){
       const qd = quaiValueOf($('mouvementQuaiDepart'), secteur);
       const qa = quaiValueOf($('mouvementQuaiArrivee'), secteur);
@@ -2147,6 +2155,7 @@
       entry.apRetirer = entry.apEnabled ? $('mouvementApRetirer').value : null;
       entry.apRemettre = entry.apEnabled ? $('mouvementApRemettre').value : null;
       entry.remarque = $('mouvementRemarque').value.trim();
+      entry.ar = $('mouvementAr').checked; entry.al = $('mouvementAl').checked;
       entry.evitage = $('mouvementEvitage').value;
     } else if(activeCategoryKey === 'corvee'){
       const type = $('corveeType').value;
@@ -2259,7 +2268,7 @@
       $('arriveeApCheck').checked = !!o.apEnabled;
       $('arriveeApField').style.display = o.apEnabled ? '' : 'none';
       if(o.apEnabled) $('arriveeApValue').value = o.apValue;
-      $('arriveeRemarque').value = o.remarque || ''; $('arriveeEvitage').value = o.evitage || '';
+      $('arriveeRemarque').value = o.remarque || ''; $('arriveeAr').checked = !!o.ar; $('arriveeAl').checked = !!o.al; $('arriveeEvitage').value = o.evitage || '';
     } else if(o.categorieKey === 'depart'){
       setQuaiValueIfPresent($('departQuai'), o.quai, secteur);
       setTimeSelectValue('departHeure', o.heureOperation || '');
@@ -2268,7 +2277,7 @@
       $('departApCheck').checked = !!o.apEnabled;
       $('departApField').style.display = o.apEnabled ? '' : 'none';
       if(o.apEnabled) $('departApValue').value = o.apValue;
-      $('departRemarque').value = o.remarque || '';
+      $('departRemarque').value = o.remarque || ''; $('departAr').checked = !!o.ar; $('departAl').checked = !!o.al;
     } else if(o.categorieKey === 'mouvement'){
       setQuaiValueIfPresent($('mouvementQuaiDepart'), o.quaiDepart, secteur);
       setQuaiValueIfPresent($('mouvementQuaiArrivee'), o.quaiArrivee, secteur);
@@ -2280,7 +2289,7 @@
       $('mouvementApCheck').checked = !!o.apEnabled;
       $('mouvementApField').style.display = o.apEnabled ? '' : 'none';
       if(o.apEnabled){ $('mouvementApRetirer').value = o.apRetirer; $('mouvementApRemettre').value = o.apRemettre; }
-      $('mouvementRemarque').value = o.remarque || ''; $('mouvementEvitage').value = o.evitage || '';
+      $('mouvementRemarque').value = o.remarque || ''; $('mouvementAr').checked = !!o.ar; $('mouvementAl').checked = !!o.al; $('mouvementEvitage').value = o.evitage || '';
     } else if(o.categorieKey === 'corvee'){
       $('corveeType').value = o.typeCorvee || '';
       setTimeSelectValue('corveeHeure', o.heureOperation || '');
@@ -2341,6 +2350,8 @@
       }
     }
     if(o.remarque) mainBits.push(o.remarque);
+    const arAl = [o.ar ? 'AR' : '', o.al ? 'AL' : ''].filter(Boolean).join(' · ');
+    if(arAl) apText = apText ? apText + ' · ' + arAl : arAl;
     return { main: mainBits.join(' · '), ap: apText };
   }
   function detailRowHtml(o){
@@ -4401,10 +4412,13 @@
 
   // -- démarrage : choix du planning (isolation totale des données par num\u00e9ro) --
   // ======== version, accueil d'un nouveau collègue, aide ========
-  const APP_VERSION = '3.13';
-  const APP_DATE = '27/11/2026';
+  const APP_VERSION = '3.14';
+  const APP_DATE = '28/11/2026';
   // Quoi de neuf : une entrée par version, la plus récente en premier
   const WHATS_NEW = [
+    {v:'3.14', d:'28/11/2026', items:[
+        'Deux nouvelles cases comme l\'AP : AR (amarrage renforcé) et AL (amarrage long), dans les arrivées, les départs et les mouvements. Elles sont facultatives et s\'affichent à droite de la carte, à côté de l\'AP'
+    ]},
     {v:'3.13', d:'27/11/2026', items:[
         'Évitage : un menu (Hautot, Jupiter, BRQ) dans les arrivées et les mouvements. Il est facultatif, tu peux valider l\'opération sans le remplir. Il s\'affiche sur la carte de l\'opération'
     ]},
